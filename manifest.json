@@ -2,7 +2,7 @@
   "name": "Mon Suivi",
   "short_name": "MonSuivi",
   "description": "Tracker fitness personnel",
-  "start_url": "/",
+  "start_url": "/Mon-Suivi-Fitness/",
   "display": "standalone",
   "background_color": "#060809",
   "theme_color": "#00e5ff",

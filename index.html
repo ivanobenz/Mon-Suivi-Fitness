@@ -6,11 +6,11 @@
 <title>Mon Suivi</title>
 <link rel="manifest" href="manifest.json"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Mon Suivi"/><style>body{-webkit-font-smoothing:antialiased;}</style>
 <style>
-:root{--bg:#0a0a0a;--surface:#1c1c1e;--surface2:#2c2c2e;--border:#3a3a3c;--border2:#48484a;--text:#ffffff;--muted:#8e8e93;--subtle:#aeaeb2;--accent:#0a84ff;--accent2:#0060df;--green:#30d158;--amber:#ffd60a;--danger:#ff453a;--pink:#ff375f;--purple:#bf5af2;--orange:#ff9f0a}
+:root{--bg:#0a0a0a;--surface:#1c1c1e;--surface2:#2c2c2e;--border:#3a3a3c;--border2:#48484a;--text:#ffffff;--muted:#8e8e93;--subtle:#aeaeb2;--accent:#c8f135;--accent2:#a8d420;--green:#c8f135;--amber:#ffd60a;--danger:#ff453a;--pink:#ff375f;--purple:#bf5af2;--orange:#ff9f0a}
 *{-webkit-tap-highlight-color:transparent;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;color:var(--text)}
-#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
 /* HEADER */
 .header{background:rgba(10,10,10,0.95);padding:20px 20px 0;position:sticky;top:0;z-index:99;border-bottom:none;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
@@ -24,7 +24,7 @@ body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro T
 .tabs{display:flex;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #1a1a1a;z-index:999;padding:0 0 env(safe-area-inset-bottom);scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:1;padding:8px 4px 4px;background:none;border:none;border-bottom:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:10px;font-weight:500;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
-.tab.active{border-bottom-color:var(--accent);color:var(--accent)}
+.tab.active{color:var(--accent)}
 /* CONTENT */
 .content{padding:16px}
 .card{background:var(--surface);border-radius:20px;padding:20px;border:none;margin-bottom:12px}
@@ -1333,8 +1333,11 @@ function render() {
   // Tabs
   const tb=document.getElementById("tabBar");
   tb.innerHTML="";
-  [{id:"recap",icon:"▲",lbl:"Récap"},{id:"nutrition",icon:"◈",lbl:"Nutri"},{id:"poids",icon:"○",lbl:"Poids"},{id:"training",icon:"◆",lbl:"Training"},{id:"sommeil",icon:"☾",lbl:"Sommeil"},{id:"semaine",icon:"◉",lbl:"Semaine"}].forEach(t=>{
-    const b=el("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}},t.icon+" "+t.lbl);
+  [{id:"recap",icon:"📝",lbl:"Récap"},{id:"nutrition",icon:"🍽️",lbl:"Nutri"},{id:"poids",icon:"⚖️",lbl:"Poids"},{id:"training",icon:"💪",lbl:"Sport"},{id:"sommeil",icon:"🌙",lbl:"Sommeil"},{id:"semaine",icon:"📊",lbl:"Semaine"}].forEach(t=>{
+    const b=el("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}});
+    const iconEl=el("span",{className:"tab-icon"},t.icon);
+    const lblEl=el("span",{},t.lbl);
+    b.appendChild(iconEl); b.appendChild(lblEl);
     tb.appendChild(b);
   });
 

@@ -6,27 +6,35 @@
 <title>Mon Suivi</title>
 <link rel="manifest" href="manifest.json"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Mon Suivi"/><style>body{-webkit-font-smoothing:antialiased;}</style>
 <style>
-:root{--bg:#0a0a0a;--surface:#1c1c1e;--surface2:#2c2c2e;--border:#3a3a3c;--border2:#48484a;--text:#ffffff;--muted:#8e8e93;--subtle:#aeaeb2;--accent:#c8f135;--accent2:#a8d420;--green:#c8f135;--amber:#ffd60a;--danger:#ff453a;--pink:#ff375f;--purple:#bf5af2;--orange:#ff9f0a}
+:root{
+--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;
+--border:#2a2a2a;--border2:#333333;
+--text:#ffffff;--muted:#555555;--subtle:#888888;
+--accent:#c8f135;--accent2:#a8d420;
+--green:#c8f135;--amber:#f5a623;--danger:#ff3b30;
+--pink:#ff375f;--purple:#bf5af2;--orange:#f5a623;
+--radius:20px;--radius-sm:12px;
+}
 *{-webkit-tap-highlight-color:transparent;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;color:var(--text)}
-#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 /* HEADER */
-.header{background:rgba(10,10,10,0.95);padding:calc(env(safe-area-inset-top) + 20px) 20px 0;position:sticky;top:0;z-index:99;border-bottom:none;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.header-top{display:flex!important;justify-content:space-between;align-items:flex-start;margin-bottom:14px;visibility:visible}
+.header{background:rgba(10,10,10,0.95);padding:20px 20px 0;position:sticky;top:0;z-index:99;border-bottom:none;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .brand-lbl{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:10px;font-weight:600;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:3px}
 .brand-title{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:700;font-size:28px;color:var(--text);text-transform:uppercase;line-height:1}
 .date-pick{background:var(--surface2);border:1px solid var(--border2);color:var(--accent);border-radius:8px;padding:6px 10px;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-weight:700;outline:none}
 .stats-row{display:flex;gap:5px;margin-bottom:12px}
-.chip{display:none}
+.chip{flex:1;background:var(--surface);border-radius:14px;padding:10px 8px;border:none;min-width:0}
 .chip-lbl{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:8px;font-weight:600;color:var(--subtle);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
 .chip-val{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tabs{display:flex;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #1a1a1a;z-index:999;padding:0 0 env(safe-area-inset-bottom);scrollbar-width:none}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;padding:8px 4px 4px;background:none;border:none;border-bottom:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:10px;font-weight:500;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
-.tab.active{color:var(--accent)}
+.tab{flex:0 0 auto;padding:11px 12px;background:none;border:none;border-bottom:2px solid transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--subtle);white-space:nowrap;transition:all .2s}
+.tab.active{border-bottom-color:var(--accent);color:var(--accent)}
 /* CONTENT */
-.content{padding:16px;padding-top:8px}
+.content{padding:16px}
 .card{background:var(--surface);border-radius:20px;padding:20px;border:none;margin-bottom:12px}
 .card.accent{border-color:rgba(0,229,255,.2)}
 .card.green{border-color:rgba(105,255,71,.2)}
@@ -355,7 +363,10 @@ const INITIAL_DATA = {
     {id:415,nom:"Pollen",cal:"37",prot:"1.7",gluc:"5.6",lip:"0",fib:"0",repasType:"dîner"},
     {id:416,nom:"Baies de goji",cal:"18",prot:"0",gluc:"4",lip:"0",fib:"0",repasType:"dîner"},
     {id:417,nom:"Beurre de cacahuète",cal:"90",prot:"3.5",gluc:"0",lip:"7.5",fib:"0",repasType:"dîner"},
-  ],entrainement:{type:"",exercices:[],notes:"",km:""},sommeil:{coucher:"",lever:""}},
+  ],entrainement:{type:"",exercices:[],notes:"",km:""},sommeil:{coucher:"",lever:""}}
+};
+
+
   "2026-04-19":{poids:"71.3",repas:[],entrainement:{type:"",exercices:[],notes:"",km:""},sommeil:{coucher:"",lever:""}},
   "2026-04-09":{poids:"72.7",repas:[],entrainement:{type:"",exercices:[],notes:"",km:""},sommeil:{coucher:"",lever:""}},
   "2026-04-08":{poids:"73.3",repas:[],entrainement:{type:"",exercices:[],notes:"",km:""},sommeil:{coucher:"",lever:""}},
@@ -1333,11 +1344,8 @@ function render() {
   // Tabs
   const tb=document.getElementById("tabBar");
   tb.innerHTML="";
-  [{id:"recap",icon:"📝",lbl:"Récap"},{id:"nutrition",icon:"🍽️",lbl:"Nutri"},{id:"poids",icon:"⚖️",lbl:"Poids"},{id:"training",icon:"💪",lbl:"Sport"},{id:"sommeil",icon:"🌙",lbl:"Sommeil"},{id:"semaine",icon:"📊",lbl:"Semaine"}].forEach(t=>{
-    const b=el("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}});
-    const iconEl=el("span",{className:"tab-icon"},t.icon);
-    const lblEl=el("span",{},t.lbl);
-    b.appendChild(iconEl); b.appendChild(lblEl);
+  [{id:"recap",icon:"▲",lbl:"Récap"},{id:"nutrition",icon:"◈",lbl:"Nutri"},{id:"poids",icon:"○",lbl:"Poids"},{id:"training",icon:"◆",lbl:"Training"},{id:"sommeil",icon:"☾",lbl:"Sommeil"},{id:"semaine",icon:"◉",lbl:"Semaine"}].forEach(t=>{
+    const b=el("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}},t.icon+" "+t.lbl);
     tb.appendChild(b);
   });
 

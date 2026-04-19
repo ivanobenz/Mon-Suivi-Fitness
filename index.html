@@ -903,6 +903,90 @@ function renderNutrition() {
   return frag;
 }
 
+// ─── CHART POIDS ─────────────────────────────────────────────────────────────
+function renderWeightChart(wHistory) {
+  if (wHistory.length < 2) return null;
+
+  const W = 340, H = 140, PL = 30, PR = 10, PT = 20, PB = 30;
+  const cW = W - PL - PR, cH = H - PT - PB;
+
+  const weights = wHistory.map(w => w.poids);
+  const minW = Math.min(...weights, GOALS.poidsObjectif) - 0.5;
+  const maxW = Math.max(...weights) + 0.5;
+  const range = maxW - minW;
+
+  const xScale = i => PL + (i / (wHistory.length - 1)) * cW;
+  const yScale = v => PT + cH - ((v - minW) / range) * cH;
+
+  const points = wHistory.map((w, i) => `${xScale(i)},${yScale(w.poids)}`).join(' ');
+  const pathD = wHistory.map((w, i) => `${i===0?'M':'L'}${xScale(i)},${yScale(w.poids)}`).join(' ');
+  const areaD = pathD + ` L${xScale(wHistory.length-1)},${PT+cH} L${xScale(0)},${PT+cH} Z`;
+
+  const goalY = yScale(GOALS.poidsObjectif);
+  const lastX = xScale(wHistory.length-1);
+  const lastY = yScale(wHistory[wHistory.length-1].poids);
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('class', 'chart-svg');
+
+  const defs = document.createElementNS(ns, 'defs');
+  const grad = document.createElementNS(ns, 'linearGradient');
+  grad.setAttribute('id', 'areaGrad'); grad.setAttribute('x1','0'); grad.setAttribute('y1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+  const s1 = document.createElementNS(ns, 'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','var(--accent)'); s1.setAttribute('stop-opacity','0.8');
+  const s2 = document.createElementNS(ns, 'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','var(--accent)'); s2.setAttribute('stop-opacity','0');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+  const goalLine = document.createElementNS(ns, 'line');
+  goalLine.setAttribute('x1', PL); goalLine.setAttribute('x2', W-PR);
+  goalLine.setAttribute('y1', goalY); goalLine.setAttribute('y2', goalY);
+  goalLine.setAttribute('stroke', 'var(--green)'); goalLine.setAttribute('stroke-width', '1');
+  goalLine.setAttribute('stroke-dasharray', '4,4'); goalLine.setAttribute('opacity', '0.6');
+  svg.appendChild(goalLine);
+
+  const goalLbl = document.createElementNS(ns, 'text');
+  goalLbl.setAttribute('x', W-PR-2); goalLbl.setAttribute('y', goalY-4);
+  goalLbl.setAttribute('text-anchor', 'end'); goalLbl.setAttribute('class', 'chart-lbl');
+  goalLbl.setAttribute('fill', 'var(--green)'); goalLbl.textContent = GOALS.poidsObjectif+'kg';
+  svg.appendChild(goalLbl);
+
+  const area = document.createElementNS(ns, 'path');
+  area.setAttribute('d', areaD); area.setAttribute('class', 'chart-area');
+  svg.appendChild(area);
+
+  const line = document.createElementNS(ns, 'path');
+  line.setAttribute('d', pathD); line.setAttribute('class', 'chart-line');
+  svg.appendChild(line);
+
+  wHistory.forEach((w, i) => {
+    if (i !== 0 && i !== wHistory.length-1 && i % Math.max(1, Math.floor(wHistory.length/5)) !== 0) return;
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', xScale(i)); dot.setAttribute('cy', yScale(w.poids));
+    dot.setAttribute('r', i === wHistory.length-1 ? '5' : '3');
+    dot.setAttribute('fill', 'var(--accent)');
+    if (i === wHistory.length-1) dot.setAttribute('filter', 'drop-shadow(0 0 4px var(--accent))');
+    svg.appendChild(dot);
+  });
+
+  const lastVal = document.createElementNS(ns, 'text');
+  lastVal.setAttribute('x', lastX); lastVal.setAttribute('y', lastY - 12);
+  lastVal.setAttribute('text-anchor', 'middle'); lastVal.setAttribute('class', 'chart-val');
+  lastVal.textContent = wHistory[wHistory.length-1].poids+'kg';
+  svg.appendChild(lastVal);
+
+  [[0, wHistory[0].date], [wHistory.length-1, wHistory[wHistory.length-1].date]].forEach(([i, d]) => {
+    const lbl = document.createElementNS(ns, 'text');
+    const [y,m,dy] = d.split('-');
+    lbl.setAttribute('x', xScale(i)); lbl.setAttribute('y', H-4);
+    lbl.setAttribute('text-anchor', i===0?'start':'end'); lbl.setAttribute('class', 'chart-lbl');
+    lbl.textContent = dy+'/'+m;
+    svg.appendChild(lbl);
+  });
+
+  return svg;
+}
+
 // ─── TAB: POIDS ───────────────────────────────────────────────────────────────
 function renderPoids() {
   const frag=document.createDocumentFragment();
@@ -937,6 +1021,14 @@ function renderPoids() {
   prog.appendChild(makeBar(progPct,0,100,8));
   prog.appendChild(el("div",{className:"delta",style:{color:delta<=0?"var(--green)":"var(--danger)"}}, (delta<=0?"▼":"▲")+" "+Math.abs(delta).toFixed(1)+" KG DEPUIS LE DÉPART"));
   frag.appendChild(prog);
+
+  if (wHistory.length >= 2) {
+    const chartWrap = el('div', {className: 'chart-wrap'});
+    chartWrap.appendChild(el('div', {className: 'chart-title'}, 'Courbe de poids'));
+    const chartSvg = renderWeightChart(wHistory);
+    if (chartSvg) chartWrap.appendChild(chartSvg);
+    frag.appendChild(chartWrap);
+  }
 
   frag.appendChild(el("div",{className:"slbl",style:{margin:"6px 0 10px"}},"Historique"));
   if (!wHistory.length) { frag.appendChild(el("div",{className:"empty"},"// aucune pesée")); }

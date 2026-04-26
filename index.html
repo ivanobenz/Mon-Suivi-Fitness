@@ -227,6 +227,7 @@ input::placeholder,textarea::placeholder{color:var(--muted)}
 .sec-title-sm{font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.micros-frame{width:100%;height:calc(100vh - 60px);border:none;display:block;}
 .fade-in{animation:fadeIn .2s ease forwards}
 </style>
 </head>
@@ -1040,14 +1041,20 @@ function render(){
   document.getElementById("datePick").value=state.date;
   const tb=document.getElementById("tabBar");
   tb.innerHTML="";
-  [{id:"recap",icon:"📝",lbl:"Récap"},{id:"nutrition",icon:"🍽",lbl:"Nutri"},{id:"poids",icon:"⚖️",lbl:"Poids"},{id:"training",icon:"💪",lbl:"Sport"},{id:"sommeil",icon:"🌙",lbl:"Sommeil"},{id:"semaine",icon:"📊",lbl:"Semaine"}].forEach(t=>{
+  [{id:"recap",icon:"📝",lbl:"Récap"},{id:"nutrition",icon:"🍽",lbl:"Nutri"},{id:"poids",icon:"⚖️",lbl:"Poids"},{id:"training",icon:"💪",lbl:"Sport"},{id:"sommeil",icon:"🌙",lbl:"Sommeil"},{id:"semaine",icon:"📊",lbl:"Semaine"},{id:"micros",icon:"⚡",lbl:"Micros"}].forEach(t=>{
     const b=el("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}});
     b.appendChild(el("span",{className:"tab-icon"},t.icon));
     b.appendChild(el("span",{className:"tab-lbl"},t.lbl));
     tb.appendChild(b);
   });
-  const c=document.getElementById("content");c.innerHTML="";
-  const tabMap={recap:renderRecap,nutrition:renderNutrition,poids:renderPoids,training:renderTraining,sommeil:renderSommeil,semaine:renderSemaine};
+  const c=document.getElementById("content");c.innerHTML="";c.style.padding=state.tab==="micros"?"0":"16px 16px 0";
+  function renderMicros(){
+  const frag=document.createDocumentFragment();
+  const iframe=el("iframe",{src:"carences-tracker.html",className:"micros-frame"});
+  frag.appendChild(iframe);
+  return frag;
+}
+const tabMap={recap:renderRecap,nutrition:renderNutrition,poids:renderPoids,training:renderTraining,sommeil:renderSommeil,semaine:renderSemaine,micros:renderMicros};
   if(tabMap[state.tab])c.appendChild(tabMap[state.tab]());
 }
 

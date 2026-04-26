@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Carences — Module Micronutriments</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00e5ff;
+    --green: #69ff47;
+    --yellow: #ffd600;
+    --pink: #ff4081;
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --text: #e0e0f0;
+    --muted: #666680;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1.1rem;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .date-display {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 10px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* MICRONUTRIENT BARS */
+  .micro-item {
+    margin-bottom: 14px;
+  }
+
+  .micro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+  }
+
+  .micro-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+  }
+
+  .micro-values {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .micro-values span {
+    font-weight: 700;
+  }
+
+  .bar-bg {
+    background: var(--border);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    position: relative;
+  }
+
+  .bar-fill.ok { background: var(--green); }
+  .bar-fill.warn { background: var(--yellow); }
+  .bar-fill.low { background: var(--pink); }
+  .bar-fill.over { background: var(--cyan); width: 100% !important; }
+
+  .micro-pct {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 3px;
+    text-align: right;
+  }
+  .micro-pct.ok { color: var(--green); }
+  .micro-pct.warn { color: var(--yellow); }
+  .micro-pct.low { color: var(--pink); }
+  .micro-pct.over { color: var(--cyan); }
+
+  /* ALERTE CARENCE */
+  .alert-box {
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+
+  .alert-box.danger {
+    background: rgba(255,64,129,0.1);
+    border: 1px solid rgba(255,64,129,0.4);
+    color: var(--pink);
+  }
+
+  .alert-box.warning {
+    background: rgba(255,214,0,0.08);
+    border: 1px solid rgba(255,214,0,0.3);
+    color: var(--yellow);
+  }
+
+  .alert-box.ok {
+    background: rgba(105,255,71,0.06);
+    border: 1px solid rgba(105,255,71,0.25);
+    color: var(--green);
+  }
+
+  .alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  .alert-content strong {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* REPAS LOGGER */
+  .meal-section {
+    margin-bottom: 16px;
+  }
+
+  .meal-label {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 8px;
+  }
+
+  .food-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    gap: 8px;
+  }
+
+  .food-name { font-weight: 600; font-size: 0.9rem; flex: 1; }
+  .food-qty {
+    font-size: 0.8rem;
+    color: var(--muted);
+    width: 50px;
+    text-align: right;
+  }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    color: var(--pink);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .btn-remove:hover { opacity: 1; }
+
+  /* ADD FOOD FORM */
+  .add-food-form {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .form-row:last-child { margin-bottom: 0; }
+
+  select, input[type="number"], input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--cyan);
+  }
+
+  select { flex: 2; min-width: 140px; }
+  input[type="number"] { flex: 1; min-width: 70px; }
+
+  .btn-add {
+    background: var(--cyan);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  .meal-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .meal-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .meal-btn.active {
+    background: var(--surface2);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  /* SUMMARY GRID */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .summary-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .summary-card .val {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .summary-card .lbl {
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .val.cyan { color: var(--cyan); }
+  .val.green { color: var(--green); }
+  .val.yellow { color: var(--yellow); }
+  .val.pink { color: var(--pink); }
+
+  /* SCORE GLOBAL */
+  .score-ring {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 10px;
+  }
+
+  .score-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--border);
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .score-circle.high { border-color: var(--green); box-shadow: 0 0 20px rgba(105,255,71,0.2); }
+  .score-circle.medium { border-color: var(--yellow); box-shadow: 0 0 20px rgba(255,214,0,0.2); }
+  .score-circle.low { border-color: var(--pink); box-shadow: 0 0 20px rgba(255,64,129,0.2); }
+
+  .score-num {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .score-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    max-width: 220px;
+  }
+
+  /* CONSEILS */
+  .conseil-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .conseil-item:last-child { border-bottom: none; }
+
+  .conseil-emoji { font-size: 1.2rem; flex-shrink: 0; }
+  .conseil-text { font-size: 0.88rem; line-height: 1.4; }
+  .conseil-text strong { color: var(--cyan); }
+
+  /* HISTORIQUE */
+  .history-day {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  .history-date {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .history-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .history-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .history-bar-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 80px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .history-bar-mini {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .history-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  /* BADGE SCORE */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge.green { background: rgba(105,255,71,0.15); color: var(--green); }
+  .badge.yellow { background: rgba(255,214,0,0.12); color: var(--yellow); }
+  .badge.pink { background: rgba(255,64,129,0.15); color: var(--pink); }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.4;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border-left: 2px solid var(--muted);
+    margin-top: 16px;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Micro Tracker</h1>
+  <div class="date-display" id="headerDate"></div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPage('bilan')">Bilan</button>
+  <button class="tab" onclick="showPage('saisie')">Saisie</button>
+  <button class="tab" onclick="showPage('alertes')">Alertes</button>
+  <button class="tab" onclick="showPage('conseils')">Conseils</button>
+  <button class="tab" onclick="showPage('historique')">Historique</button>
+  <button class="tab" onclick="showPage('satiety')">Satiété</button>
+  <button class="tab" onclick="showPage('inflam')">Inflam.</button>
+  <button class="tab" onclick="showPage('timing')">Timing</button>
+  <button class="tab active-special" onclick="showPage('qualite')">Score</button>
+  <button class="tab" onclick="showPage('patterns')">Patterns</button>
+</div>
+
+<!-- PAGE BILAN -->
+<div class="page active" id="page-bilan">
+  <div class="section-title">Score du jour</div>
+  <div class="card">
+    <div class="score-ring">
+      <div class="score-circle" id="scoreCircle">
+        <span class="score-num" id="scoreNum">—</span>
+        <span class="score-label">/100</span>
+      </div>
+      <div class="score-text" id="scoreText">Ajoute tes repas pour calculer ton score micronutriments.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Protéines effectivement absorbées</div>
+  <div class="card" id="protAbsCard">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:12px 0;">Ajoute tes repas pour calculer.</div>
+  </div>
+
+  <div class="section-title">Ratio Oméga-3 / Oméga-6</div>
+  <div class="card" id="ratioCard">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:12px 0;">Ajoute tes repas pour calculer le ratio.</div>
+  </div>
+
+  <div class="section-title">Score Diversité</div>
+  <div class="card" id="diversiteCard">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:12px 0;">Ajoute tes repas pour calculer la diversité.</div>
+  </div>
+
+  <div class="section-title">Micronutriments</div>
+  <div class="card" id="microBars">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">
+      Aucun aliment enregistré aujourd'hui.
+    </div>
+  </div>
+
+  <div class="section-title">Résumé</div>
+  <div class="summary-grid" id="summaryGrid">
+    <div class="summary-card">
+      <div class="val cyan" id="sumOk">0</div>
+      <div class="lbl">Objectifs atteints</div>
+    </div>
+    <div class="summary-card">
+      <div class="val pink" id="sumLow">0</div>
+      <div class="lbl">Carences détectées</div>
+    </div>
+    <div class="summary-card">
+      <div class="val yellow" id="sumWarn">0</div>
+      <div class="lbl">À surveiller</div>
+    </div>
+    <div class="summary-card">
+      <div class="val green" id="sumAliments">0</div>
+      <div class="lbl">Aliments loggés</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE SAISIE -->
+<div class="page" id="page-saisie">
+  <div class="section-title">Repas</div>
+
+  <div class="meal-selector">
+    <button class="meal-btn active" onclick="setMeal('petit-dej', this)">Petit-déj</button>
+    <button class="meal-btn" onclick="setMeal('dejeuner', this)">Déjeuner</button>
+    <button class="meal-btn" onclick="setMeal('gouter', this)">Goûter</button>
+    <button class="meal-btn" onclick="setMeal('diner', this)">Dîner</button>
+  </div>
+
+  <div class="add-food-form card">
+    <div class="form-row">
+      <select id="foodSelect" onchange="updatePrepVisibility()">
+        <option value="">— Choisir un aliment —</option>
+      </select>
+    </div>
+    <div class="form-row" id="prepRow" style="display:none;">
+      <select id="prepMode">
+        <option value="seul">Seul (base)</option>
+        <option value="vitC">+ Vitamine C (citron, poivron...)</option>
+        <option value="cereales">+ Céréales complémentaires</option>
+        <option value="trempe">Trempé 12h avant cuisson</option>
+        <option value="moulu">Moulu (graines)</option>
+        <option value="vitC+trempe">Trempé + Vitamine C (optimal)</option>
+      </select>
+    </div>
+    <div class="form-row" id="absorptionPreview" style="display:none;"></div>
+    <div class="form-row">
+      <input type="number" id="foodQty" placeholder="g" min="1" max="999" value="100">
+      <button class="btn-add" onclick="addFood()">+ Ajouter</button>
+    </div>
+  </div>
+
+  <div id="mealLog"></div>
+</div>
+
+<!-- PAGE SATIÉTÉ -->
+<div class="page" id="page-satiety">
+  <div class="section-title">Indice de satiété du jour</div>
+  <div class="card" id="satietyCard">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">Ajoute tes repas pour calculer.</div>
+  </div>
+  <div class="section-title">Par repas</div>
+  <div id="satietyMeals"></div>
+  <div class="disclaimer">L'indice de satiété rapporte la sensation de rassasiement aux calories consommées. Plus il est élevé, mieux tu gères la faim en cut.</div>
+</div>
+
+<!-- PAGE INFLAMMATOIRE -->
+<div class="page" id="page-inflam">
+  <div class="section-title">Charge inflammatoire journalière</div>
+  <div class="card" id="inflam-score-card">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">Ajoute tes repas pour calculer.</div>
+  </div>
+  <div class="section-title">Détail par aliment</div>
+  <div id="inflam-detail"></div>
+  <div class="disclaimer">Score négatif = anti-inflammatoire (récupération favorisée). Score positif = pro-inflammatoire. En cut + entraînement intensif, viser un score total négatif.</div>
+</div>
+
+<!-- PAGE TIMING -->
+<div class="page" id="page-timing">
+  <div class="section-title">Fenêtres nutritionnelles</div>
+  <div id="timing-windows"></div>
+  <div class="section-title">Répartition par repas</div>
+  <div id="timing-meals"></div>
+  <div class="disclaimer">Le timing des nutriments influence la synthèse protéique, la récupération et la gestion de l'énergie. Ces recommandations sont indicatives.</div>
+</div>
+
+<!-- PAGE ALERTES -->
+<div class="page" id="page-alertes">
+  <div class="section-title">Alertes actives</div>
+  <div id="alertesContent">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:30px 0;">
+      Aucune donnée aujourd'hui.
+    </div>
+  </div>
+  <div class="disclaimer">
+    ⚠️ Ce module détecte les <strong>apports insuffisants</strong>, pas les carences biologiques réelles. Une prise de sang reste indispensable pour confirmer (vitamine D, fer, B12 notamment).
+  </div>
+</div>
+
+<!-- PAGE CONSEILS -->
+<div class="page" id="page-conseils">
+  <div class="section-title">Aliments conseillés (ta base)</div>
+  <div class="card" id="conseilsContent">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">
+      Calcul en cours après saisie des repas…
+    </div>
+  </div>
+
+  <div class="section-title">Supplémentation à considérer</div>
+  <div class="card">
+    <div class="conseil-item">
+      <div class="conseil-emoji">🌞</div>
+      <div class="conseil-text"><strong>Vitamine D</strong> — Quasi impossible à atteindre via l'alimentation seule en cut. 1000–2000 UI/j recommandé en phase hivernale/nuageuse.</div>
+    </div>
+    <div class="conseil-item">
+      <div class="conseil-emoji">🐟</div>
+      <div class="conseil-text"><strong>Oméga-3</strong> — Si saumon < 3×/sem, envisage 1–2g EPA+DHA/j. Anti-inflammatoire, récupération musculaire améliorée.</div>
+    </div>
+    <div class="conseil-item">
+      <div class="conseil-emoji">🪨</div>
+      <div class="conseil-text"><strong>Magnésium</strong> — Déficit fréquent en cut + entraînement intensif. Préférer glycinate ou bisglycinate (meilleure biodisponibilité, pas de laxatif). 200–300mg/j au coucher.</div>
+    </div>
+    <div class="conseil-item">
+      <div class="conseil-emoji">⚡</div>
+      <div class="conseil-text"><strong>Zinc</strong> — Perdu dans la sueur. Le saumon et le thon en apportent, mais vérifier les niveaux si récupération lente ou immunité basse.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE SCORE QUALITÉ -->
+<div class="page" id="page-qualite">
+  <div class="section-title">Score qualité de la journée</div>
+  <div class="card" id="qualityCard">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">Ajoute tes repas pour calculer.</div>
+  </div>
+  <div class="section-title">Détail des composantes</div>
+  <div id="qualityDetail"></div>
+</div>
+
+<!-- PAGE PATTERNS -->
+<div class="page" id="page-patterns">
+  <div class="section-title">Analyse de tes patterns</div>
+  <div id="patternsContent">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:30px 0;">
+      L'analyse nécessite au moins 3 jours de données.<br>Continue à logger tes repas chaque jour.
+    </div>
+  </div>
+</div>
+
+<!-- PAGE HISTORIQUE -->
+<div class="page" id="page-historique">
+  <div class="section-title">7 derniers jours</div>
+  <div id="historiqueContent">
+    <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:30px 0;">
+      L'historique s'accumule au fil des jours.
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── BASE DE DONNÉES ALIMENTS (micronutriments pour 100g) ───────────────────
+const FOODS_DB = {
+  "Filet de saumon (Aldi)": { portion: 100, micros: { "Vitamine D": 11, "Vitamine E": 3.5, "Vitamine A": 12, "Oméga-3": 2200, "Oméga-6": 666, "B12": 3.2, "B6": 0.6, "Zinc": 0.6, "Sélénium": 36, "Magnésium": 29, "Potassium": 363, "Fer": 0.3, "Calcium": 15, "Vitamine C": 3, "Folates": 26 } },
+  "Thon égoutté": { portion: 100, micros: { "Vitamine D": 1.7, "Vitamine E": 0.5, "Vitamine A": 20, "Oméga-3": 350, "Oméga-6": 220, "B12": 2.5, "B6": 0.4, "Zinc": 0.7, "Sélénium": 90, "Magnésium": 35, "Potassium": 300, "Fer": 1.3, "Calcium": 10, "Vitamine C": 0, "Folates": 8 } },
+  "Fromage blanc 0%": { portion: 100, micros: { "Vitamine D": 0.1, "Vitamine E": 0.1, "Vitamine A": 10, "Oméga-3": 5, "Oméga-6": 30, "B12": 0.3, "B6": 0.05, "Zinc": 0.4, "Sélénium": 3, "Magnésium": 11, "Potassium": 130, "Fer": 0.1, "Calcium": 95, "Vitamine C": 0, "Folates": 14 } },
+  "Pollen de fleurs": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 1.8, "Vitamine A": 50, "Oméga-3": 200, "Oméga-6": 1500, "B12": 0.1, "B6": 0.5, "Zinc": 3, "Sélénium": 3, "Magnésium": 90, "Potassium": 400, "Fer": 3.5, "Calcium": 67, "Vitamine C": 15, "Folates": 120 } },
+  "Granola chocolat": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 1.2, "Vitamine A": 0, "Oméga-3": 80, "Oméga-6": 3200, "B12": 0, "B6": 0.1, "Zinc": 1.2, "Sélénium": 5, "Magnésium": 55, "Potassium": 250, "Fer": 2.5, "Calcium": 40, "Vitamine C": 0, "Folates": 20 } },
+  "Pâtes blé complet": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.5, "Vitamine A": 0, "Oméga-3": 50, "Oméga-6": 1100, "B12": 0, "B6": 0.15, "Zinc": 1.3, "Sélénium": 37, "Magnésium": 44, "Potassium": 190, "Fer": 1.8, "Calcium": 21, "Vitamine C": 0, "Folates": 30 } },
+  "Whey ISO hydrolysée": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.2, "Vitamine A": 0, "Oméga-3": 20, "Oméga-6": 300, "B12": 0.8, "B6": 0.2, "Zinc": 1.5, "Sélénium": 18, "Magnésium": 30, "Potassium": 160, "Fer": 0.5, "Calcium": 130, "Vitamine C": 0, "Folates": 10 } },
+  "Banane": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.1, "Vitamine A": 3, "Oméga-3": 27, "Oméga-6": 46, "B12": 0, "B6": 0.37, "Zinc": 0.15, "Sélénium": 1, "Magnésium": 27, "Potassium": 358, "Fer": 0.26, "Calcium": 5, "Vitamine C": 8.7, "Folates": 20 } },
+  "Framboises": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.87, "Vitamine A": 2, "Oméga-3": 126, "Oméga-6": 249, "B12": 0, "B6": 0.06, "Zinc": 0.42, "Sélénium": 0.2, "Magnésium": 22, "Potassium": 151, "Fer": 0.69, "Calcium": 25, "Vitamine C": 26, "Folates": 21 } },
+  "Fraises": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.29, "Vitamine A": 1, "Oméga-3": 65, "Oméga-6": 90, "B12": 0, "B6": 0.05, "Zinc": 0.14, "Sélénium": 0.4, "Magnésium": 13, "Potassium": 153, "Fer": 0.41, "Calcium": 16, "Vitamine C": 58, "Folates": 24 } },
+  "Riz blanc cuit": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.04, "Vitamine A": 0, "Oméga-3": 10, "Oméga-6": 60, "B12": 0, "B6": 0.09, "Zinc": 0.49, "Sélénium": 7.5, "Magnésium": 13, "Potassium": 35, "Fer": 0.2, "Calcium": 10, "Vitamine C": 0, "Folates": 3 } },
+  "Haricots rouges cuits": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.1, "Vitamine A": 0, "Oméga-3": 170, "Oméga-6": 90, "B12": 0, "B6": 0.12, "Zinc": 0.95, "Sélénium": 1.5, "Magnésium": 35, "Potassium": 405, "Fer": 2.2, "Calcium": 50, "Vitamine C": 1, "Folates": 130 } },
+  "Beurre de cacahuète": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 9.1, "Vitamine A": 0, "Oméga-3": 70, "Oméga-6": 14100, "B12": 0, "B6": 0.4, "Zinc": 2.5, "Sélénium": 7.5, "Magnésium": 168, "Potassium": 649, "Fer": 1.74, "Calcium": 43, "Vitamine C": 0, "Folates": 87 } },
+  "Oeuf entier": { portion: 100, micros: { "Vitamine D": 2, "Vitamine E": 1.03, "Vitamine A": 140, "Oméga-3": 100, "Oméga-6": 1400, "B12": 1.1, "B6": 0.14, "Zinc": 1.1, "Sélénium": 30, "Magnésium": 12, "Potassium": 138, "Fer": 1.75, "Calcium": 56, "Vitamine C": 0, "Folates": 47 } },
+  "Epinards crus": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 2.03, "Vitamine A": 469, "Oméga-3": 138, "Oméga-6": 26, "B12": 0, "B6": 0.2, "Zinc": 0.53, "Sélénium": 1, "Magnésium": 79, "Potassium": 558, "Fer": 2.7, "Calcium": 99, "Vitamine C": 28, "Folates": 194 } },
+  "Collagène (poudre)": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0, "Vitamine A": 0, "Oméga-3": 0, "Oméga-6": 0, "B12": 0, "B6": 0, "Zinc": 0.7, "Sélénium": 0, "Magnésium": 0, "Potassium": 0, "Fer": 0, "Calcium": 0, "Vitamine C": 0, "Folates": 0 } },
+  "Brocoli cuit": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.78, "Vitamine A": 77, "Oméga-3": 105, "Oméga-6": 32, "B12": 0, "B6": 0.18, "Zinc": 0.41, "Sélénium": 2.3, "Magnésium": 21, "Potassium": 293, "Fer": 0.73, "Calcium": 40, "Vitamine C": 65, "Folates": 108 } },
+  "Chou-fleur cuit": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.08, "Vitamine A": 1, "Oméga-3": 37, "Oméga-6": 46, "B12": 0, "B6": 0.16, "Zinc": 0.27, "Sélénium": 0.6, "Magnésium": 15, "Potassium": 142, "Fer": 0.44, "Calcium": 22, "Vitamine C": 44, "Folates": 57 } },
+  "Patate douce cuite": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.26, "Vitamine A": 961, "Oméga-3": 0, "Oméga-6": 10, "B12": 0, "B6": 0.29, "Zinc": 0.3, "Sélénium": 0.6, "Magnésium": 27, "Potassium": 475, "Fer": 0.69, "Calcium": 38, "Vitamine C": 19, "Folates": 6 } },
+  "Huile d'olive": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 14.4, "Vitamine A": 0, "Oméga-3": 762, "Oméga-6": 9763, "B12": 0, "B6": 0, "Zinc": 0, "Sélénium": 0, "Magnésium": 0, "Potassium": 1, "Fer": 0.56, "Calcium": 1, "Vitamine C": 0, "Folates": 0 } },
+  "Sardines en boite": { portion: 100, micros: { "Vitamine D": 4.8, "Vitamine E": 2.0, "Vitamine A": 55, "Oméga-3": 1480, "Oméga-6": 566, "B12": 8.9, "B6": 0.17, "Zinc": 1.3, "Sélénium": 52, "Magnésium": 39, "Potassium": 397, "Fer": 2.9, "Calcium": 382, "Vitamine C": 0, "Folates": 10 } },
+  "Colin (lieu noir) cuit": { portion: 100, micros: { "Vitamine D": 2.3, "Vitamine E": 0.6, "Vitamine A": 10, "Oméga-3": 310, "Oméga-6": 120, "B12": 1.5, "B6": 0.35, "Zinc": 0.5, "Sélénium": 36, "Magnésium": 35, "Potassium": 420, "Fer": 0.4, "Calcium": 24, "Vitamine C": 0, "Folates": 12 } },
+  "Saumon cuit": { portion: 100, micros: { "Vitamine D": 13, "Vitamine E": 3.6, "Vitamine A": 15, "Oméga-3": 2500, "Oméga-6": 700, "B12": 3.5, "B6": 0.65, "Zinc": 0.64, "Sélénium": 38, "Magnésium": 30, "Potassium": 380, "Fer": 0.35, "Calcium": 15, "Vitamine C": 3, "Folates": 28 } },
+  "Poulet entier cuit": { portion: 100, micros: { "Vitamine D": 0.1, "Vitamine E": 0.3, "Vitamine A": 40, "Oméga-3": 90, "Oméga-6": 1600, "B12": 0.35, "B6": 0.5, "Zinc": 2.1, "Sélénium": 22, "Magnésium": 25, "Potassium": 260, "Fer": 1.3, "Calcium": 13, "Vitamine C": 0, "Folates": 8 } },
+  "Filet de poulet cuit": { portion: 100, micros: { "Vitamine D": 0.1, "Vitamine E": 0.27, "Vitamine A": 6, "Oméga-3": 60, "Oméga-6": 680, "B12": 0.3, "B6": 0.9, "Zinc": 1.0, "Sélénium": 27, "Magnésium": 29, "Potassium": 370, "Fer": 0.7, "Calcium": 11, "Vitamine C": 0, "Folates": 4 } },
+  "Boeuf (steak) cuit": { portion: 100, micros: { "Vitamine D": 0.1, "Vitamine E": 0.57, "Vitamine A": 6, "Oméga-3": 80, "Oméga-6": 440, "B12": 2.6, "B6": 0.4, "Zinc": 5.8, "Sélénium": 28, "Magnésium": 22, "Potassium": 318, "Fer": 2.7, "Calcium": 18, "Vitamine C": 0, "Folates": 8 } },
+  "Carottes crues": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.66, "Vitamine A": 835, "Oméga-3": 2, "Oméga-6": 115, "B12": 0, "B6": 0.14, "Zinc": 0.24, "Sélénium": 0.1, "Magnésium": 12, "Potassium": 320, "Fer": 0.3, "Calcium": 33, "Vitamine C": 6, "Folates": 19 } },
+  "Haricots verts cuits": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.41, "Vitamine A": 35, "Oméga-3": 60, "Oméga-6": 68, "B12": 0, "B6": 0.07, "Zinc": 0.24, "Sélénium": 0.6, "Magnésium": 25, "Potassium": 209, "Fer": 1.03, "Calcium": 37, "Vitamine C": 12, "Folates": 37 } },
+  "Pois chiches cuits": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.35, "Vitamine A": 1, "Oméga-3": 50, "Oméga-6": 2730, "B12": 0, "B6": 0.14, "Zinc": 1.53, "Sélénium": 3.7, "Magnésium": 48, "Potassium": 291, "Fer": 2.89, "Calcium": 49, "Vitamine C": 1.3, "Folates": 172 } },
+  "Petits pois cuits": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.13, "Vitamine A": 38, "Oméga-3": 50, "Oméga-6": 135, "B12": 0, "B6": 0.16, "Zinc": 1.24, "Sélénium": 1.8, "Magnésium": 39, "Potassium": 271, "Fer": 1.47, "Calcium": 27, "Vitamine C": 14, "Folates": 65 } },
+  "Myrtilles": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.57, "Vitamine A": 3, "Oméga-3": 58, "Oméga-6": 136, "B12": 0, "B6": 0.05, "Zinc": 0.16, "Sélénium": 0.1, "Magnésium": 6, "Potassium": 77, "Fer": 0.28, "Calcium": 6, "Vitamine C": 9.7, "Folates": 6 } },
+  "Mangue": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.9, "Vitamine A": 54, "Oméga-3": 30, "Oméga-6": 28, "B12": 0, "B6": 0.12, "Zinc": 0.09, "Sélénium": 0.6, "Magnésium": 10, "Potassium": 168, "Fer": 0.16, "Calcium": 11, "Vitamine C": 36, "Folates": 43 } },
+  "Kiwi": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 1.46, "Vitamine A": 4, "Oméga-3": 40, "Oméga-6": 87, "B12": 0, "B6": 0.06, "Zinc": 0.14, "Sélénium": 0.2, "Magnésium": 17, "Potassium": 312, "Fer": 0.31, "Calcium": 34, "Vitamine C": 93, "Folates": 25 } },
+  "Avocat": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 2.07, "Vitamine A": 7, "Oméga-3": 111, "Oméga-6": 1689, "B12": 0, "B6": 0.26, "Zinc": 0.64, "Sélénium": 0.4, "Magnésium": 29, "Potassium": 485, "Fer": 0.55, "Calcium": 12, "Vitamine C": 10, "Folates": 81 } },
+  "Graines de courge": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 2.18, "Vitamine A": 0, "Oméga-3": 170, "Oméga-6": 20700, "B12": 0, "B6": 0.14, "Zinc": 7.64, "Sélénium": 9.4, "Magnésium": 550, "Potassium": 919, "Fer": 8.07, "Calcium": 46, "Vitamine C": 1.9, "Folates": 57 } },
+  "Graines de chia": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.5, "Vitamine A": 0, "Oméga-3": 17800, "Oméga-6": 5840, "B12": 0, "B6": 0.08, "Zinc": 4.58, "Sélénium": 55, "Magnésium": 335, "Potassium": 407, "Fer": 7.72, "Calcium": 631, "Vitamine C": 1.6, "Folates": 49 } },
+  "Graines de lin": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.31, "Vitamine A": 0, "Oméga-3": 22800, "Oméga-6": 5900, "B12": 0, "B6": 0.47, "Zinc": 4.34, "Sélénium": 25, "Magnésium": 392, "Potassium": 813, "Fer": 5.73, "Calcium": 255, "Vitamine C": 0.6, "Folates": 87 } },
+  "Amandes": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 25.6, "Vitamine A": 0, "Oméga-3": 6, "Oméga-6": 12320, "B12": 0, "B6": 0.14, "Zinc": 3.08, "Sélénium": 4.1, "Magnésium": 270, "Potassium": 733, "Fer": 3.71, "Calcium": 264, "Vitamine C": 0, "Folates": 50 } },
+  "Lentilles cuites": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 0.11, "Vitamine A": 1, "Oméga-3": 73, "Oméga-6": 280, "B12": 0, "B6": 0.18, "Zinc": 1.27, "Sélénium": 2.8, "Magnésium": 36, "Potassium": 369, "Fer": 3.33, "Calcium": 19, "Vitamine C": 1.5, "Folates": 181 } },
+  "Baies de goji": { portion: 100, micros: { "Vitamine D": 0, "Vitamine E": 1.0, "Vitamine A": 540, "Oméga-3": 0, "Oméga-6": 3012, "B12": 0, "B6": 0.14, "Zinc": 1.5, "Sélénium": 50, "Magnésium": 83, "Potassium": 1132, "Fer": 6.8, "Calcium": 190, "Vitamine C": 48, "Folates": 0 } },
+};
+
+
+// ─── TAUX D'ABSORPTION PROTÉINES ─────────────────────────────────────────────
+const PROTEIN_CONTENT = {
+  "Filet de saumon (Aldi)": 20,
+  "Thon égoutté": 25,
+  "Fromage blanc 0%": 8,
+  "Pollen de fleurs": 25,
+  "Granola chocolat": 8,
+  "Pâtes blé complet": 5,
+  "Whey ISO hydrolysée": 85,
+  "Banane": 1.1,
+  "Framboises": 1.2,
+  "Fraises": 0.8,
+  "Riz blanc cuit": 2.7,
+  "Haricots rouges cuits": 8.7,
+  "Beurre de cacahuète": 25,
+  "Oeuf entier": 13,
+  "Epinards crus": 2.9,
+  "Collagène (poudre)": 90,
+  "Brocoli cuit": 2.8,
+  "Chou-fleur cuit": 1.9,
+  "Patate douce cuite": 1.6,
+  "Huile d'olive": 0,
+  "Sardines en boite": 21,
+  "Colin (lieu noir) cuit": 19,
+  "Saumon cuit": 20,
+  "Poulet entier cuit": 25,
+  "Filet de poulet cuit": 31,
+  "Boeuf (steak) cuit": 26,
+  "Carottes crues": 0.9,
+  "Haricots verts cuits": 1.8,
+  "Pois chiches cuits": 8.9,
+  "Petits pois cuits": 5.4,
+  "Myrtilles": 0.7,
+  "Mangue": 0.8,
+  "Kiwi": 1.1,
+  "Avocat": 2,
+  "Graines de courge": 19,
+  "Graines de chia": 17,
+  "Graines de lin": 18,
+  "Amandes": 21,
+  "Lentilles cuites": 9,
+  "Baies de goji": 14,
+};
+
+// Base absorption rate (no preparation bonus)
+const BASE_ABSORPTION = {
+  "Filet de saumon (Aldi)": 95,
+  "Thon égoutté": 95,
+  "Fromage blanc 0%": 92,
+  "Pollen de fleurs": 75,
+  "Granola chocolat": 78,
+  "Pâtes blé complet": 78,
+  "Whey ISO hydrolysée": 99,
+  "Banane": 85,
+  "Framboises": 85,
+  "Fraises": 85,
+  "Riz blanc cuit": 82,
+  "Haricots rouges cuits": 58,
+  "Beurre de cacahuète": 88,
+  "Oeuf entier": 97,
+  "Epinards crus": 60,
+  "Collagène (poudre)": 99,
+  "Brocoli cuit": 75,
+  "Chou-fleur cuit": 75,
+  "Patate douce cuite": 82,
+  "Huile d'olive": 100,
+  "Sardines en boite": 95,
+  "Colin (lieu noir) cuit": 94,
+  "Saumon cuit": 95,
+  "Poulet entier cuit": 93,
+  "Filet de poulet cuit": 93,
+  "Boeuf (steak) cuit": 93,
+  "Carottes crues": 80,
+  "Haricots verts cuits": 75,
+  "Pois chiches cuits": 60,
+  "Petits pois cuits": 62,
+  "Myrtilles": 85,
+  "Mangue": 85,
+  "Kiwi": 85,
+  "Avocat": 85,
+  "Graines de courge": 85,
+  "Graines de chia": 35,
+  "Graines de lin": 32,
+  "Amandes": 85,
+  "Lentilles cuites": 55,
+  "Baies de goji": 75,
+};
+
+// Foods that benefit from prep mode (plant-based with anti-nutrients)
+const PREP_FOODS = new Set([
+  "Haricots rouges cuits", "Pois chiches cuits", "Lentilles cuites",
+  "Petits pois cuits", "Graines de chia", "Graines de lin",
+  "Epinards crus", "Brocoli cuit", "Pâtes blé complet",
+  "Graines de courge", "Amandes",
+]);
+
+// Absorption bonus per prep mode
+const PREP_BONUS = {
+  "seul":      0,    // base
+  "vitC":     +20,   // + vit C (citron, poivron...)
+  "cereales": +15,   // + céréales complémentaires
+  "trempe":   +20,   // trempage 12h
+  "moulu":    +50,   // graines moulues (chia/lin)
+  "vitC+trempe": +30, // combo optimal
+};
+
+const PREP_LABELS = {
+  "seul":      "Seul (base)",
+  "vitC":      "+ Vit C (citron...)",
+  "cereales":  "+ Céréales",
+  "trempe":    "Trempé 12h",
+  "moulu":     "Moulu",
+  "vitC+trempe": "Trempé + Vit C",
+};
+
+function getEffectiveAbsorption(foodName, prepMode) {
+  const base = BASE_ABSORPTION[foodName] || 85;
+  if (!PREP_FOODS.has(foodName)) return base;
+  const bonus = PREP_BONUS[prepMode || "seul"] || 0;
+  return Math.min(base + bonus, 98);
+}
+
+function getEffectiveProtein(foodName, qty, prepMode) {
+  const protPer100 = PROTEIN_CONTENT[foodName] || 0;
+  const rawProt = (protPer100 * qty) / 100;
+  const absorption = getEffectiveAbsorption(foodName, prepMode) / 100;
+  return rawProt * absorption;
+}
+
+
+// ─── INDICE DE SATIÉTÉ (score /100 pour 100 kcal) ────────────────────────────
+const SATIETY = {
+  "Filet de saumon (Aldi)": 82, "Thon égoutté": 85, "Fromage blanc 0%": 88,
+  "Pollen de fleurs": 55, "Granola chocolat": 42, "Pâtes blé complet": 58,
+  "Whey ISO hydrolysée": 90, "Banane": 60, "Framboises": 78, "Fraises": 76,
+  "Riz blanc cuit": 45, "Haricots rouges cuits": 72, "Beurre de cacahuète": 48,
+  "Oeuf entier": 80, "Epinards crus": 82, "Collagène (poudre)": 70,
+  "Brocoli cuit": 85, "Chou-fleur cuit": 80, "Patate douce cuite": 62,
+  "Huile d'olive": 25, "Sardines en boite": 83, "Colin (lieu noir) cuit": 83,
+  "Saumon cuit": 82, "Poulet entier cuit": 84, "Filet de poulet cuit": 88,
+  "Boeuf (steak) cuit": 80, "Carottes crues": 74, "Haricots verts cuits": 78,
+  "Pois chiches cuits": 70, "Petits pois cuits": 68, "Myrtilles": 72,
+  "Mangue": 58, "Kiwi": 70, "Avocat": 50, "Graines de courge": 52,
+  "Graines de chia": 65, "Graines de lin": 62, "Amandes": 50,
+  "Lentilles cuites": 74, "Baies de goji": 65,
+};
+
+// kcal per 100g
+const KCAL_PER_100 = {
+  "Filet de saumon (Aldi)": 179, "Thon égoutté": 116, "Fromage blanc 0%": 57,
+  "Pollen de fleurs": 315, "Granola chocolat": 420, "Pâtes blé complet": 130,
+  "Whey ISO hydrolysée": 380, "Banane": 89, "Framboises": 52, "Fraises": 32,
+  "Riz blanc cuit": 130, "Haricots rouges cuits": 127, "Beurre de cacahuète": 588,
+  "Oeuf entier": 143, "Epinards crus": 23, "Collagène (poudre)": 350,
+  "Brocoli cuit": 35, "Chou-fleur cuit": 25, "Patate douce cuite": 90,
+  "Huile d'olive": 884, "Sardines en boite": 208, "Colin (lieu noir) cuit": 92,
+  "Saumon cuit": 206, "Poulet entier cuit": 239, "Filet de poulet cuit": 165,
+  "Boeuf (steak) cuit": 250, "Carottes crues": 41, "Haricots verts cuits": 35,
+  "Pois chiches cuits": 164, "Petits pois cuits": 84, "Myrtilles": 57,
+  "Mangue": 60, "Kiwi": 61, "Avocat": 160, "Graines de courge": 559,
+  "Graines de chia": 486, "Graines de lin": 534, "Amandes": 579,
+  "Lentilles cuites": 116, "Baies de goji": 349,
+};
+
+// ─── CHARGE INFLAMMATOIRE (score: négatif=anti-inflam, positif=pro-inflam) ────
+// Score per 100g. Negative = anti-inflammatory, Positive = pro-inflammatory
+const INFLAM_SCORE = {
+  "Filet de saumon (Aldi)": -82, "Thon égoutté": -60, "Fromage blanc 0%": -5,
+  "Pollen de fleurs": -30, "Granola chocolat": +45, "Pâtes blé complet": +12,
+  "Whey ISO hydrolysée": +5, "Banane": -10, "Framboises": -50,
+  "Fraises": -45, "Riz blanc cuit": +18, "Haricots rouges cuits": -20,
+  "Beurre de cacahuète": +22, "Oeuf entier": -8, "Epinards crus": -55,
+  "Collagène (poudre)": -5, "Brocoli cuit": -52, "Chou-fleur cuit": -35,
+  "Patate douce cuite": -18, "Huile d'olive": -38, "Sardines en boite": -90,
+  "Colin (lieu noir) cuit": -40, "Saumon cuit": -85, "Poulet entier cuit": -8,
+  "Filet de poulet cuit": -10, "Boeuf (steak) cuit": +15,
+  "Carottes crues": -25, "Haricots verts cuits": -28, "Pois chiches cuits": -15,
+  "Petits pois cuits": -18, "Myrtilles": -65, "Mangue": -20,
+  "Kiwi": -30, "Avocat": -35, "Graines de courge": -18,
+  "Graines de chia": -55, "Graines de lin": -58, "Amandes": -20,
+  "Lentilles cuites": -22, "Baies de goji": -60,
+};
+
+// ─── TIMING NUTRIMENTS ───────────────────────────────────────────────────────
+const FOOD_TIMING = {
+  // type: 'protein' | 'carb_fast' | 'carb_slow' | 'fat' | 'fiber' | 'mixed'
+  "Filet de saumon (Aldi)": "protein", "Thon égoutté": "protein",
+  "Fromage blanc 0%": "protein", "Whey ISO hydrolysée": "protein",
+  "Sardines en boite": "protein", "Colin (lieu noir) cuit": "protein",
+  "Saumon cuit": "protein", "Poulet entier cuit": "protein",
+  "Filet de poulet cuit": "protein", "Boeuf (steak) cuit": "protein",
+  "Oeuf entier": "protein", "Collagène (poudre)": "protein",
+  "Banane": "carb_fast", "Mangue": "carb_fast", "Myrtilles": "carb_fast",
+  "Framboises": "carb_fast", "Fraises": "carb_fast", "Kiwi": "carb_fast",
+  "Baies de goji": "carb_fast",
+  "Riz blanc cuit": "carb_fast", "Patate douce cuite": "carb_slow",
+  "Pâtes blé complet": "carb_slow", "Haricots rouges cuits": "carb_slow",
+  "Pois chiches cuits": "carb_slow", "Lentilles cuites": "carb_slow",
+  "Petits pois cuits": "carb_slow",
+  "Huile d'olive": "fat", "Avocat": "fat", "Beurre de cacahuète": "fat",
+  "Amandes": "fat", "Graines de courge": "fat",
+  "Graines de chia": "fiber", "Graines de lin": "fiber",
+  "Epinards crus": "fiber", "Brocoli cuit": "fiber",
+  "Chou-fleur cuit": "fiber", "Carottes crues": "fiber",
+  "Haricots verts cuits": "fiber",
+  "Pollen de fleurs": "mixed", "Granola chocolat": "mixed",
+  "Whey ISO hydrolysée": "protein",
+};
+
+// AJR Références (hommes ~25-35 ans, activité physique)
+const AJR = {
+  "Vitamine D": { val: 15, unit: "µg", note: "Difficile via aliments seuls" },
+  "Oméga-3": { val: 1600, unit: "mg", note: "EPA+DHA combinés" },
+  "Oméga-6": { val: 17000, unit: "mg", note: "Ratio O3/O6 cible < 1/5" },
+  "B12": { val: 2.4, unit: "µg", note: "Essentiel récupération nerveuse" },
+  "B6": { val: 1.3, unit: "mg", note: "Métabolisme protéines" },
+  "Zinc": { val: 11, unit: "mg", note: "Immunité + testostérone" },
+  "Magnésium": { val: 420, unit: "mg", note: "Récupération musculaire" },
+  "Potassium": { val: 3500, unit: "mg", note: "Équilibre électrolytes" },
+  "Fer": { val: 8, unit: "mg", note: "Transport oxygène" },
+  "Calcium": { val: 1000, unit: "mg", note: "Os + contraction musculaire" },
+  "Vitamine C": { val: 90, unit: "mg", note: "Collagène + immunité" },
+  "Vitamine E": { val: 15, unit: "mg", note: "Protection musculaire anti-oxydant" },
+  "Vitamine A": { val: 900, unit: "µg", note: "Régénération cellulaire, vision" },
+  "Sélénium": { val: 55, unit: "µg", note: "Thyroïde + immunité + récupération" },
+  "Folates": { val: 400, unit: "µg", note: "Synthèse ADN" },
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentMeal = 'petit-dej';
+let todayLog = JSON.parse(localStorage.getItem('micro_today') || '[]');
+let history = JSON.parse(localStorage.getItem('micro_history') || '[]');
+
+// Check if new day
+const today = new Date().toLocaleDateString('fr-FR');
+const lastDay = localStorage.getItem('micro_last_day');
+if (lastDay && lastDay !== today) {
+  // Save yesterday to history
+  const yestTotals = computeTotals(todayLog);
+  const yestScore = computeScore(yestTotals);
+  const yestInflam = computeInflamScore(todayLog);
+  const yestSatiety = computeSatietyScore(todayLog);
+  const yestProtEff = computeEffectiveProtein(todayLog);
+  const yestDiversite = computeDiversiteScore(todayLog);
+  const yestQuality = computeQualityScore(yestScore, yestInflam, yestSatiety, yestProtEff, yestDiversite);
+  history.unshift({ date: lastDay, totals: yestTotals, score: yestScore, inflam: yestInflam, satiety: yestSatiety, protEff: yestProtEff, diversite: yestDiversite, quality: yestQuality, foods: todayLog.length });
+  if (history.length > 7) history = history.slice(0, 7);
+  localStorage.setItem('micro_history', JSON.stringify(history));
+  todayLog = [];
+  localStorage.setItem('micro_today', '[]');
+}
+localStorage.setItem('micro_last_day', today);
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function computeTotals(log) {
+  const totals = {};
+  Object.keys(AJR).forEach(k => totals[k] = 0);
+  log.forEach(entry => {
+    const food = FOODS_DB[entry.food];
+    if (!food) return;
+    const ratio = entry.qty / 100;
+    Object.keys(food.micros).forEach(k => {
+      if (totals[k] !== undefined) totals[k] += food.micros[k] * ratio;
+    });
+  });
+  return totals;
+}
+
+function computeScore(totals) {
+  const keys = Object.keys(AJR);
+  let total = 0;
+  keys.forEach(k => {
+    const pct = Math.min((totals[k] / AJR[k].val) * 100, 100);
+    total += pct;
+  });
+  return Math.round(total / keys.length);
+}
+
+function getStatus(pct) {
+  if (pct >= 80) return 'ok';
+  if (pct >= 50) return 'warn';
+  return 'low';
+}
+
+function getStatusLabel(pct) {
+  if (pct >= 100) return 'Atteint ✓';
+  if (pct >= 80) return 'Bon';
+  if (pct >= 50) return 'Insuffisant';
+  return 'Carence';
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+// FOOD CATEGORIES for diversity score
+const FOOD_CATEGORIES = {
+  "proteines_animales": ["Filet de saumon (Aldi)", "Thon égoutté", "Sardines en boite", "Colin (lieu noir) cuit", "Saumon cuit", "Poulet entier cuit", "Filet de poulet cuit", "Boeuf (steak) cuit", "Oeuf entier"],
+  "poissons_gras": ["Filet de saumon (Aldi)", "Sardines en boite", "Saumon cuit", "Thon égoutté", "Colin (lieu noir) cuit"],
+  "legumes_verts": ["Epinards crus", "Brocoli cuit", "Chou-fleur cuit", "Haricots verts cuits", "Petits pois cuits"],
+  "legumes_couleur": ["Carottes crues", "Patate douce cuite"],
+  "legumineuses": ["Haricots rouges cuits", "Pois chiches cuits", "Lentilles cuites"],
+  "fruits_rouges": ["Framboises", "Fraises", "Myrtilles", "Baies de goji"],
+  "fruits_autres": ["Banane", "Mangue", "Kiwi", "Avocat"],
+  "graines_oleagineux": ["Beurre de cacahuète", "Graines de courge", "Graines de chia", "Graines de lin", "Amandes"],
+  "laitiers": ["Fromage blanc 0%"],
+  "cereales_completes": ["Pâtes blé complet", "Riz blanc cuit", "Granola chocolat"],
+  "supplements": ["Whey ISO hydrolysée", "Collagène (poudre)", "Pollen de fleurs"],
+  "huiles": ["Huile d'olive"],
+};
+
+const CATEGORY_LABELS = {
+  "proteines_animales": "Protéines animales",
+  "poissons_gras": "Poissons gras",
+  "legumes_verts": "Légumes verts",
+  "legumes_couleur": "Légumes colorés",
+  "legumineuses": "Légumineuses",
+  "fruits_rouges": "Fruits rouges",
+  "fruits_autres": "Fruits",
+  "graines_oleagineux": "Graines & oléagineux",
+  "laitiers": "Laitiers",
+  "cereales_completes": "Céréales complètes",
+  "supplements": "Suppléments",
+  "huiles": "Huiles",
+};
+
+function renderRatio(totals) {
+  const o3 = totals["Oméga-3"] || 0;
+  const o6 = totals["Oméga-6"] || 0;
+  const card = document.getElementById("ratioCard");
+  if (todayLog.length === 0) return;
+
+  const ratio = o6 > 0 ? (o6 / o3).toFixed(1) : "—";
+  const ratioNum = o6 > 0 ? o6 / o3 : 0;
+  let statusColor = "var(--green)";
+  let statusText = "Excellent — ratio anti-inflammatoire optimal";
+  let statusClass = "ok";
+  if (ratioNum > 10) { statusColor = "var(--pink)"; statusText = "Trop élevé — favorise l'inflammation"; statusClass = "low"; }
+  else if (ratioNum > 5) { statusColor = "var(--yellow)"; statusText = "Acceptable — peut mieux faire"; statusClass = "warn"; }
+  else if (ratioNum > 3) { statusColor = "var(--cyan)"; statusText = "Bon — dans la cible"; statusClass = "ok"; }
+
+  const icon = statusClass === "ok" ? "✅" : statusClass === "warn" ? "⚠️" : "⛔";
+  card.innerHTML =
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">' +
+      '<div style="text-align:center;flex:1;">' +
+        '<div style="font-family:\'Archivo Black\',sans-serif;font-size:2rem;color:var(--cyan);">' + (o3/1000).toFixed(2) + 'g</div>' +
+        '<div style="font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Oméga-3</div>' +
+      '</div>' +
+      '<div style="font-size:1.5rem;color:var(--border);">/</div>' +
+      '<div style="text-align:center;flex:1;">' +
+        '<div style="font-family:\'Archivo Black\',sans-serif;font-size:2rem;color:var(--yellow);">' + (o6/1000).toFixed(2) + 'g</div>' +
+        '<div style="font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Oméga-6</div>' +
+      '</div>' +
+      '<div style="font-size:1.5rem;color:var(--border);">=</div>' +
+      '<div style="text-align:center;flex:1;">' +
+        '<div style="font-family:\'Archivo Black\',sans-serif;font-size:2rem;color:' + statusColor + ';">1:' + ratio + '</div>' +
+        '<div style="font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Ratio</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="alert-box ' + statusClass + '" style="margin-bottom:0;">' +
+      '<div class="alert-icon">' + icon + '</div>' +
+      '<div class="alert-content"><strong>' + statusText + '</strong> — Cible : 1:3 à 1:5 maximum</div>' +
+    '</div>';
+}
+
+function renderDiversite() {
+  const card = document.getElementById("diversiteCard");
+  if (todayLog.length === 0) return;
+
+  const foodsEaten = new Set(todayLog.map(function(e) { return e.food; }));
+  const categoriesCovered = new Set();
+  const categoryDetails = {};
+
+  Object.keys(FOOD_CATEGORIES).forEach(function(cat) {
+    const foods = FOOD_CATEGORIES[cat];
+    const eaten = foods.filter(function(f) { return foodsEaten.has(f); });
+    if (eaten.length > 0) categoriesCovered.add(cat);
+    categoryDetails[cat] = eaten;
+  });
+
+  const totalCats = Object.keys(FOOD_CATEGORIES).length;
+  const coveredCats = categoriesCovered.size;
+  const score = Math.round((coveredCats / totalCats) * 100);
+  const uniqueFoods = foodsEaten.size;
+
+  const statusColor = score >= 60 ? "var(--green)" : score >= 40 ? "var(--yellow)" : "var(--pink)";
+  const statusText = score >= 60 ? "Bonne diversité" : score >= 40 ? "Diversité moyenne — varier davantage" : "Diversité insuffisante — risque de plafonnement micro";
+
+  let catsHtml = '';
+  Object.keys(FOOD_CATEGORIES).forEach(function(cat) {
+    const covered = categoryDetails[cat] && categoryDetails[cat].length > 0;
+    const icon = covered ? '✅' : '⬜';
+    const nameStyle = covered ? 'font-weight:700;color:var(--text);' : 'color:var(--muted);';
+    const detail = covered ? '<span style="font-size:0.75rem;color:var(--muted);margin-left:auto;">' + categoryDetails[cat].join(', ') + '</span>' : '';
+    catsHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:0.9rem;">' + icon + '</span>' +
+      '<span style="font-size:0.85rem;' + nameStyle + '">' + CATEGORY_LABELS[cat] + '</span>' +
+      detail +
+    '</div>';
+  });
+
+  card.innerHTML =
+    '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
+      '<div class="summary-card" style="flex:1;"><div class="val" style="color:' + statusColor + ';">' + score + '%</div><div class="lbl">Score diversité</div></div>' +
+      '<div class="summary-card" style="flex:1;"><div class="val cyan">' + uniqueFoods + '</div><div class="lbl">Aliments distincts</div></div>' +
+      '<div class="summary-card" style="flex:1;"><div class="val green">' + coveredCats + '/' + totalCats + '</div><div class="lbl">Catégories</div></div>' +
+    '</div>' +
+    '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Catégories couvertes</div>' +
+    catsHtml +
+    '<div style="margin-top:10px;font-size:0.82rem;color:' + statusColor + ';font-weight:700;">' + statusText + '</div>';
+}
+
+
+// ─── RENDER SATIÉTÉ ──────────────────────────────────────────────────────────
+function renderSatiety() {
+  if (todayLog.length === 0) return;
+  const meals = { 'petit-dej': 'Petit-déjeuner', 'dejeuner': 'Déjeuner', 'gouter': 'Goûter', 'diner': 'Dîner' };
+
+  // Global score
+  let totalSatScore = 0;
+  let totalKcal = 0;
+  todayLog.forEach(function(item) {
+    const kcal = ((KCAL_PER_100[item.food] || 150) * item.qty) / 100;
+    const sat = SATIETY[item.food] || 60;
+    totalSatScore += sat * kcal;
+    totalKcal += kcal;
+  });
+  const globalSat = totalKcal > 0 ? Math.round(totalSatScore / totalKcal) : 0;
+  const satColor = globalSat >= 72 ? 'var(--green)' : globalSat >= 55 ? 'var(--yellow)' : 'var(--pink)';
+  const satText = globalSat >= 72 ? 'Excellent — alimentation très rassasiante' : globalSat >= 55 ? 'Correct — peut être optimisé' : 'Faible — risque de fringales en cut';
+
+  document.getElementById('satietyCard').innerHTML =
+    '<div style="text-align:center;padding:10px 0 14px;">' +
+      '<div style="font-family:Archivo Black,sans-serif;font-size:3rem;color:' + satColor + ';">' + globalSat + '</div>' +
+      '<div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">/100</div>' +
+      '<div style="font-size:0.88rem;color:' + satColor + ';font-weight:700;">' + satText + '</div>' +
+    '</div>';
+
+  // Per meal
+  let mealsHtml = '';
+  Object.keys(meals).forEach(function(mealKey) {
+    const items = todayLog.filter(function(e) { return e.meal === mealKey; });
+    if (items.length === 0) return;
+    let mealSat = 0, mealKcal = 0;
+    items.forEach(function(item) {
+      const kcal = ((KCAL_PER_100[item.food] || 150) * item.qty) / 100;
+      mealSat += (SATIETY[item.food] || 60) * kcal;
+      mealKcal += kcal;
+    });
+    const ms = mealKcal > 0 ? Math.round(mealSat / mealKcal) : 0;
+    const mc = ms >= 72 ? 'var(--green)' : ms >= 55 ? 'var(--yellow)' : 'var(--pink)';
+    mealsHtml += '<div class="card" style="margin-bottom:8px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div class="meal-label" style="margin:0;">' + meals[mealKey] + '</div>' +
+        '<div style="font-family:Archivo Black,sans-serif;font-size:1.3rem;color:' + mc + ';">' + ms + '<span style="font-size:0.7rem;color:var(--muted);">/100</span></div>' +
+      '</div>';
+    items.forEach(function(item) {
+      const sat = SATIETY[item.food] || 60;
+      const c = sat >= 72 ? 'var(--green)' : sat >= 55 ? 'var(--yellow)' : 'var(--pink)';
+      mealsHtml += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">' +
+        '<span style="font-size:0.82rem;">' + item.food + '</span>' +
+        '<span style="font-size:0.82rem;font-weight:700;color:' + c + ';">' + sat + '</span>' +
+      '</div>';
+    });
+    mealsHtml += '</div>';
+  });
+  document.getElementById('satietyMeals').innerHTML = mealsHtml;
+}
+
+// ─── RENDER INFLAMMATOIRE ────────────────────────────────────────────────────
+function renderInflam() {
+  if (todayLog.length === 0) return;
+
+  let totalScore = 0;
+  const details = [];
+  todayLog.forEach(function(item) {
+    const score = ((INFLAM_SCORE[item.food] || 0) * item.qty) / 100;
+    totalScore += score;
+    if (Math.abs(score) > 1) details.push({ food: item.food, score: score, qty: item.qty });
+  });
+  details.sort(function(a,b) { return a.score - b.score; });
+
+  const rounded = Math.round(totalScore);
+  const isAnti = rounded <= 0;
+  const scoreColor = rounded <= -50 ? 'var(--green)' : rounded <= 0 ? 'var(--cyan)' : rounded <= 30 ? 'var(--yellow)' : 'var(--pink)';
+  const scoreText = rounded <= -50 ? 'Excellent — fort pouvoir anti-inflammatoire' :
+    rounded <= 0 ? 'Bon — légèrement anti-inflammatoire' :
+    rounded <= 30 ? 'Attention — charge pro-inflammatoire modérée' :
+    'Problématique — inflammation élevée, récupération ralentie';
+  const icon = rounded <= 0 ? '✅' : rounded <= 30 ? '⚠️' : '⛔';
+  const statusClass = rounded <= 0 ? 'ok' : rounded <= 30 ? 'warn' : 'low';
+
+  document.getElementById('inflam-score-card').innerHTML =
+    '<div style="text-align:center;padding:10px 0 14px;">' +
+      '<div style="font-family:Archivo Black,sans-serif;font-size:3rem;color:' + scoreColor + ';">' + (rounded > 0 ? '+' : '') + rounded + '</div>' +
+      '<div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Score inflammatoire</div>' +
+    '</div>' +
+    '<div class="alert-box ' + statusClass + '" style="margin-bottom:0;">' +
+      '<div class="alert-icon">' + icon + '</div>' +
+      '<div class="alert-content"><strong>' + scoreText + '</strong></div>' +
+    '</div>';
+
+  let detailHtml = '';
+  details.forEach(function(d) {
+    const isA = d.score <= 0;
+    const c = d.score <= -15 ? 'var(--green)' : d.score <= 0 ? 'var(--cyan)' : d.score <= 15 ? 'var(--yellow)' : 'var(--pink)';
+    detailHtml += '<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:10px 14px;">' +
+      '<div>' +
+        '<div style="font-size:0.88rem;font-weight:700;">' + d.food + '</div>' +
+        '<div style="font-size:0.75rem;color:var(--muted);">' + d.qty + 'g</div>' +
+      '</div>' +
+      '<div style="font-family:Archivo Black,sans-serif;font-size:1.2rem;color:' + c + ';">' +
+        (d.score > 0 ? '+' : '') + Math.round(d.score) +
+        '<span style="font-size:0.65rem;color:var(--muted);display:block;text-align:right;">' + (isA ? 'anti-inflam' : 'pro-inflam') + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('inflam-detail').innerHTML = detailHtml || '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:10px 0;">Données insuffisantes.</div>';
+}
+
+// ─── RENDER TIMING ───────────────────────────────────────────────────────────
+function renderTiming() {
+  if (todayLog.length === 0) return;
+  const meals = { 'petit-dej': 'Petit-déjeuner', 'dejeuner': 'Déjeuner', 'gouter': 'Goûter', 'diner': 'Dîner' };
+  const mealOrder = ['petit-dej', 'dejeuner', 'gouter', 'diner'];
+
+  // Check key timing windows
+  const breakfastItems = todayLog.filter(function(e) { return e.meal === 'petit-dej'; });
+  const dinnerItems = todayLog.filter(function(e) { return e.meal === 'diner'; });
+  const allProtein = todayLog.filter(function(e) { return FOOD_TIMING[e.food] === 'protein'; });
+
+  const breakfastHasProt = breakfastItems.some(function(e) { return FOOD_TIMING[e.food] === 'protein'; });
+  const dinnerHasProt = dinnerItems.some(function(e) { return FOOD_TIMING[e.food] === 'protein'; });
+  const dinnerHasFastCarb = dinnerItems.some(function(e) { return FOOD_TIMING[e.food] === 'carb_fast'; });
+  const dinnerHasFat = dinnerItems.some(function(e) { return FOOD_TIMING[e.food] === 'fat'; });
+  const totalProtFoods = allProtein.length;
+
+  const windows = [
+    {
+      label: 'Petit-déjeuner protéiné',
+      ok: breakfastHasProt,
+      okText: 'Protéines au petit-déj ✓ — limite le catabolisme matinal',
+      nokText: 'Pas de protéines au petit-déj — risque de catabolisme musculaire',
+      tip: 'Ajoute fromage blanc, œufs ou whey au réveil.',
+    },
+    {
+      label: 'Apport protéique réparti',
+      ok: totalProtFoods >= 3,
+      okText: 'Protéines bien réparties sur la journée ✓',
+      nokText: 'Concentre moins de 3 prises protéinées — synthèse protéique sous-optimale',
+      tip: 'Vise 3-4 prises de protéines espacées de 3-4h.',
+    },
+    {
+      label: 'Dîner protéiné (caséine)',
+      ok: dinnerHasProt,
+      okText: 'Protéines au dîner ✓ — récupération nocturne assurée',
+      nokText: 'Pas de protéines au dîner — récupération nocturne compromise',
+      tip: 'Fromage blanc ou saumon au dîner = caséine naturelle.',
+    },
+    {
+      label: 'Glucides rapides le soir',
+      ok: !dinnerHasFastCarb,
+      okText: 'Pas de glucides rapides au dîner ✓',
+      nokText: 'Glucides rapides au dîner — pic insulinique peu favorable en cut',
+      tip: 'Préfère glucides complexes ou légumes le soir.',
+    },
+    {
+      label: 'Lipides au dîner',
+      ok: !dinnerHasFat || dinnerHasProt,
+      okText: 'Équilibre lipides/protéines correct au dîner ✓',
+      nokText: 'Beaucoup de lipides au dîner sans protéines — mauvaise composition du dernier repas',
+      tip: 'Un peu de lipides sains (avocat, huile olive) est OK si protéines présentes.',
+    },
+  ];
+
+  let windowsHtml = '';
+  windows.forEach(function(w) {
+    const c = w.ok ? 'ok' : 'warning';
+    const icon = w.ok ? '✅' : '⚠️';
+    windowsHtml += '<div class="alert-box ' + c + '" style="margin-bottom:8px;">' +
+      '<div class="alert-icon">' + icon + '</div>' +
+      '<div class="alert-content">' +
+        '<strong>' + w.label + '</strong>' +
+        '<div>' + (w.ok ? w.okText : w.nokText) + '</div>' +
+        (!w.ok ? '<div style="margin-top:4px;font-size:0.8rem;opacity:0.8;">💡 ' + w.tip + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('timing-windows').innerHTML = windowsHtml;
+
+  // Per meal breakdown
+  let mealsHtml = '';
+  mealOrder.forEach(function(mealKey) {
+    const items = todayLog.filter(function(e) { return e.meal === mealKey; });
+    if (items.length === 0) return;
+
+    const typeCounts = { protein:0, carb_fast:0, carb_slow:0, fat:0, fiber:0, mixed:0 };
+    items.forEach(function(item) {
+      const t = FOOD_TIMING[item.food] || 'mixed';
+      typeCounts[t]++;
+    });
+
+    const typeColors = { protein:'var(--cyan)', carb_fast:'var(--yellow)', carb_slow:'var(--green)', fat:'var(--pink)', fiber:'#a78bfa', mixed:'var(--muted)' };
+    const typeLabels = { protein:'Protéines', carb_fast:'Glucides rapides', carb_slow:'Glucides lents', fat:'Lipides', fiber:'Fibres', mixed:'Mixte' };
+
+    mealsHtml += '<div class="card" style="margin-bottom:8px;">' +
+      '<div class="meal-label" style="margin-bottom:8px;">' + meals[mealKey] + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+
+    Object.keys(typeCounts).forEach(function(type) {
+      if (typeCounts[type] === 0) return;
+      mealsHtml += '<div style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;background:rgba(0,0,0,0.3);border:1px solid ' + typeColors[type] + ';color:' + typeColors[type] + ';">' +
+        typeLabels[type] + ' ×' + typeCounts[type] +
+      '</div>';
+    });
+
+    mealsHtml += '</div></div>';
+  });
+  document.getElementById('timing-meals').innerHTML = mealsHtml || '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:10px 0;">Ajoute tes repas.</div>';
+}
+
+
+// ─── COMPUTE HELPERS ─────────────────────────────────────────────────────────
+function computeInflamScore(log) {
+  let total = 0;
+  log.forEach(function(item) {
+    total += ((INFLAM_SCORE[item.food] || 0) * item.qty) / 100;
+  });
+  return Math.round(total);
+}
+
+function computeSatietyScore(log) {
+  let totalSat = 0, totalKcal = 0;
+  log.forEach(function(item) {
+    const kcal = ((KCAL_PER_100[item.food] || 150) * item.qty) / 100;
+    totalSat += (SATIETY[item.food] || 60) * kcal;
+    totalKcal += kcal;
+  });
+  return totalKcal > 0 ? Math.round(totalSat / totalKcal) : 0;
+}
+
+function computeEffectiveProtein(log) {
+  let total = 0;
+  log.forEach(function(item) {
+    total += getEffectiveProtein(item.food, item.qty, item.prep);
+  });
+  return Math.round(total);
+}
+
+function computeDiversiteScore(log) {
+  const foodsEaten = new Set(log.map(function(e) { return e.food; }));
+  let covered = 0;
+  Object.keys(FOOD_CATEGORIES).forEach(function(cat) {
+    if (FOOD_CATEGORIES[cat].some(function(f) { return foodsEaten.has(f); })) covered++;
+  });
+  return Math.round((covered / Object.keys(FOOD_CATEGORIES).length) * 100);
+}
+
+function computeQualityScore(microScore, inflam, satiety, protEff, diversite) {
+  // microScore 0-100 (30%)
+  // inflam: negative is good. Map -100 to +50 -> 0-100 (20%)
+  const inflam100 = Math.max(0, Math.min(100, Math.round(((inflam * -1) + 50) / 1.5)));
+  // satiety 0-100 (20%)
+  // protEff: target 160g = 100. Scale (15%)
+  const prot100 = Math.min(100, Math.round((protEff / 160) * 100));
+  // diversite 0-100 (15%)
+  return Math.round(
+    microScore * 0.30 +
+    inflam100 * 0.20 +
+    satiety * 0.20 +
+    prot100 * 0.15 +
+    diversite * 0.15
+  );
+}
+
+// ─── RENDER SCORE QUALITÉ ────────────────────────────────────────────────────
+function renderQuality() {
+  const card = document.getElementById('qualityCard');
+  const detail = document.getElementById('qualityDetail');
+  if (!card || todayLog.length === 0) return;
+
+  const totals = computeTotals(todayLog);
+  const microScore = computeScore(totals);
+  const inflam = computeInflamScore(todayLog);
+  const satiety = computeSatietyScore(todayLog);
+  const protEff = computeEffectiveProtein(todayLog);
+  const diversite = computeDiversiteScore(todayLog);
+  const quality = computeQualityScore(microScore, inflam, satiety, protEff, diversite);
+
+  const qColor = quality >= 75 ? 'var(--green)' : quality >= 55 ? 'var(--yellow)' : 'var(--pink)';
+  const qText = quality >= 75 ? "Excellente journée" : quality >= 55 ? "Journée correcte — axes d'amélioration identifiés" : "Journée insuffisante — voir détail";
+  const qGrade = quality >= 85 ? 'A' : quality >= 75 ? 'B' : quality >= 60 ? 'C' : quality >= 45 ? 'D' : 'F';
+
+  card.innerHTML =
+    '<div style="display:flex;align-items:center;gap:20px;padding:10px 0;">' +
+      '<div style="text-align:center;min-width:80px;">' +
+        '<div style="font-family:Archivo Black,sans-serif;font-size:3.5rem;line-height:1;color:' + qColor + ';">' + qGrade + '</div>' +
+        '<div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Grade</div>' +
+      '</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-family:Archivo Black,sans-serif;font-size:2.5rem;color:' + qColor + ';line-height:1;">' + quality + '<span style="font-size:1rem;color:var(--muted);">/100</span></div>' +
+        '<div style="font-size:0.88rem;color:' + qColor + ';margin-top:4px;font-weight:700;">' + qText + '</div>' +
+      '</div>' +
+    '</div>';
+
+  const inflam100 = Math.max(0, Math.min(100, Math.round(((inflam * -1) + 50) / 1.5)));
+  const prot100 = Math.min(100, Math.round((protEff / 160) * 100));
+
+  const components = [
+    { label: 'Micronutriments', score: microScore, weight: 30, target: 'Objectif : > 80%' },
+    { label: 'Anti-inflammatoire', score: inflam100, weight: 20, target: 'Objectif : score inflam. négatif' },
+    { label: 'Satiété', score: satiety, weight: 20, target: 'Objectif : > 72/100' },
+    { label: 'Protéines effectifs', score: prot100, weight: 15, target: 'Objectif : 160g/jour' },
+    { label: 'Diversité alimentaire', score: diversite, weight: 15, target: 'Objectif : > 60% catégories' },
+  ];
+
+  let detailHtml = '';
+  components.forEach(function(c) {
+    const cc = c.score >= 75 ? 'var(--green)' : c.score >= 50 ? 'var(--yellow)' : 'var(--pink)';
+    const contribution = Math.round(c.score * c.weight / 100);
+    detailHtml += '<div class="card" style="margin-bottom:8px;padding:12px 14px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">' +
+        '<span style="font-weight:700;font-size:0.92rem;">' + c.label + '</span>' +
+        '<span style="font-size:0.75rem;color:var(--muted);">×' + c.weight + '% = <span style="color:' + cc + ';font-weight:700;">+' + contribution + 'pts</span></span>' +
+      '</div>' +
+      '<div style="background:var(--border);border-radius:3px;height:6px;margin-bottom:5px;">' +
+        '<div style="height:100%;border-radius:3px;background:' + cc + ';width:' + Math.min(c.score,100) + '%;transition:width 0.5s;"></div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;">' +
+        '<span style="font-size:0.75rem;color:var(--muted);">' + c.target + '</span>' +
+        '<span style="font-size:0.8rem;font-weight:700;color:' + cc + ';">' + c.score + '/100</span>' +
+      '</div>' +
+    '</div>';
+  });
+  detail.innerHTML = detailHtml;
+}
+
+// ─── RENDER PATTERNS ─────────────────────────────────────────────────────────
+function renderPatterns() {
+  const container = document.getElementById('patternsContent');
+  if (!container) return;
+
+  // Need today + history combined for analysis
+  const totals = computeTotals(todayLog);
+  const todayData = {
+    date: new Date().toLocaleDateString('fr-FR'),
+    score: computeScore(totals),
+    inflam: computeInflamScore(todayLog),
+    satiety: computeSatietyScore(todayLog),
+    protEff: computeEffectiveProtein(todayLog),
+    diversite: computeDiversiteScore(todayLog),
+    quality: computeQualityScore(computeScore(totals), computeInflamScore(todayLog), computeSatietyScore(todayLog), computeEffectiveProtein(todayLog), computeDiversiteScore(todayLog)),
+    foods: todayLog.length,
+  };
+
+  const allDays = todayLog.length > 0 ? [todayData].concat(history) : history;
+
+  if (allDays.length < 3) {
+    container.innerHTML = '<div class="card"><div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">' +
+      'Il faut au moins 3 jours de données pour détecter des patterns.<br><br>' +
+      '<span style="color:var(--cyan);font-weight:700;">Jours enregistrés : ' + allDays.length + '/3</span>' +
+    '</div></div>';
+    return;
+  }
+
+  const patterns = [];
+
+  // Pattern 1: Consistency of protein intake
+  const protScores = allDays.map(function(d) { return d.protEff || 0; });
+  const avgProt = protScores.reduce(function(a,b){return a+b;},0) / protScores.length;
+  const protVariance = protScores.map(function(p) { return Math.abs(p - avgProt); });
+  const avgVariance = protVariance.reduce(function(a,b){return a+b;},0) / protVariance.length;
+  if (avgProt < 130) {
+    patterns.push({ type: 'danger', icon: '⛔', title: 'Déficit protéique chronique', desc: 'Moyenne ' + Math.round(avgProt) + 'g/j de protéines effectifs sur ' + allDays.length + ' jours. Cible : 160g. La synthèse protéique et la préservation musculaire sont compromises.', action: 'Ajoute whey, filet de poulet ou thon à chaque repas.' });
+  } else if (avgVariance > 30) {
+    patterns.push({ type: 'warning', icon: '⚠️', title: 'Apport protéique irrégulier', desc: 'Tes protéines varient de ±' + Math.round(avgVariance) + 'g/j. La synthèse protéique est optimale quand l\'apport est stable.', action: 'Vise ' + Math.round(avgProt) + 'g de protéines chaque jour sans exception.' });
+  } else {
+    patterns.push({ type: 'ok', icon: '✅', title: 'Apport protéique régulier', desc: 'Moyenne ' + Math.round(avgProt) + 'g/j, variation ±' + Math.round(avgVariance) + 'g. Cohérent et suffisant.', action: null });
+  }
+
+  // Pattern 2: Inflammatory trend
+  const inflams = allDays.map(function(d) { return d.inflam || 0; });
+  const avgInflam = inflams.reduce(function(a,b){return a+b;},0) / inflams.length;
+  const highInflamDays = inflams.filter(function(i) { return i > 20; }).length;
+  if (highInflamDays >= 2) {
+    patterns.push({ type: 'danger', icon: '🔥', title: 'Inflammation chronique détectée', desc: highInflamDays + ' jour(s) sur ' + allDays.length + ' avec score pro-inflammatoire élevé (>20). Récupération ralentie, cortisol élevé, risque de perte musculaire accrue en cut.', action: 'Intègre saumon, sardines, myrtilles ou chia quotidiennement.' });
+  } else if (avgInflam < -30) {
+    patterns.push({ type: 'ok', icon: '✅', title: 'Bonne charge anti-inflammatoire', desc: 'Score moyen : ' + Math.round(avgInflam) + ' sur ' + allDays.length + ' jours. Récupération favorisée.', action: null });
+  } else {
+    patterns.push({ type: 'warning', icon: '⚠️', title: 'Charge anti-inflammatoire insuffisante', desc: 'Score moyen : ' + Math.round(avgInflam) + '. Vise < -30 chaque jour.', action: 'Ajoute 1 poisson gras ou une poignée de fruits rouges chaque jour.' });
+  }
+
+  // Pattern 3: Satiety vs diversite correlation
+  const lowSatDays = allDays.filter(function(d) { return (d.satiety || 0) < 55; });
+  if (lowSatDays.length >= 2) {
+    patterns.push({ type: 'warning', icon: '🍽', title: 'Satiété faible récurrente', desc: lowSatDays.length + ' jour(s) avec satiété < 55/100. En cut, une alimentation peu rassasiante favorise les écarts et le surmenage hormonal.', action: 'Privilégie filet de poulet, brocoli, fromage blanc — densité protéique maximale pour peu de calories.' });
+  }
+
+  // Pattern 4: Micronutrient consistency
+  const microScores = allDays.map(function(d) { return d.score || 0; });
+  const avgMicro = microScores.reduce(function(a,b){return a+b;},0) / microScores.length;
+  const lowMicroDays = microScores.filter(function(s) { return s < 50; }).length;
+  if (lowMicroDays >= 2) {
+    patterns.push({ type: 'danger', icon: '⛔', title: 'Carence micronutriments récurrente', desc: lowMicroDays + ' jour(s) avec score micro < 50/100. En cut prolongé, un déficit micronutriments chronique ralentit le métabolisme et favorise la perte musculaire.', action: 'Intègre épinards, sardines ou pollen chaque jour — forte densité micro pour peu de calories.' });
+  } else if (avgMicro >= 70) {
+    patterns.push({ type: 'ok', icon: '✅', title: 'Micronutriments bien couverts', desc: 'Score moyen ' + Math.round(avgMicro) + '/100 sur ' + allDays.length + ' jours. Continue.', action: null });
+  }
+
+  // Pattern 5: Diversity trend
+  const divScores = allDays.map(function(d) { return d.diversite || 0; });
+  const avgDiv = divScores.reduce(function(a,b){return a+b;},0) / divScores.length;
+  if (avgDiv < 40) {
+    patterns.push({ type: 'warning', icon: '🔁', title: 'Alimentation répétitive', desc: 'Score diversité moyen : ' + Math.round(avgDiv) + '%. Tu consommes probablement les mêmes 6-8 aliments chaque jour. Tu plafonnes sur certains micros quoi que tu fasses.', action: 'Introduis 1 nouvel aliment par semaine. Essaie lentilles, sardines ou baies de goji.' });
+  }
+
+  // Pattern 6: Quality trend (improving or declining?)
+  if (allDays.length >= 4) {
+    const recent = allDays.slice(0, 2).map(function(d){return d.quality||0;});
+    const older = allDays.slice(2).map(function(d){return d.quality||0;});
+    const recentAvg = recent.reduce(function(a,b){return a+b;},0)/recent.length;
+    const olderAvg = older.reduce(function(a,b){return a+b;},0)/older.length;
+    const diff = Math.round(recentAvg - olderAvg);
+    if (diff >= 8) {
+      patterns.push({ type: 'ok', icon: '📈', title: 'Progression détectée', desc: 'Score qualité en hausse de +' + diff + ' pts sur les derniers jours. Ta routine s\'améliore.', action: null });
+    } else if (diff <= -8) {
+      patterns.push({ type: 'warning', icon: '📉', title: 'Dégradation détectée', desc: 'Score qualité en baisse de ' + diff + ' pts sur les derniers jours. Identifie ce qui a changé.', action: 'Compare tes journées récentes aux meilleures dans l\'historique.' });
+    }
+  }
+
+  if (patterns.length === 0) {
+    container.innerHTML = '<div class="card"><div style="color:var(--green);font-size:0.88rem;text-align:center;padding:16px 0;">✅ Aucun pattern négatif détecté. Continue comme ça.</div></div>';
+    return;
+  }
+
+  // Render timeline chart for quality
+  const chartHtml = renderPatternChart(allDays);
+
+  let html = chartHtml;
+  html += '<div class="section-title" style="margin-top:16px;">Patterns détectés (' + patterns.length + ')</div>';
+  patterns.forEach(function(p) {
+    const bgColor = p.type === 'ok' ? 'rgba(105,255,71,0.06)' : p.type === 'warning' ? 'rgba(255,214,0,0.08)' : 'rgba(255,64,129,0.1)';
+    const borderColor = p.type === 'ok' ? 'rgba(105,255,71,0.25)' : p.type === 'warning' ? 'rgba(255,214,0,0.3)' : 'rgba(255,64,129,0.4)';
+    const textColor = p.type === 'ok' ? 'var(--green)' : p.type === 'warning' ? 'var(--yellow)' : 'var(--pink)';
+    html += '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:12px 14px;margin-bottom:8px;">' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+        '<span style="font-size:1.1rem;">' + p.icon + '</span>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700;color:' + textColor + ';margin-bottom:4px;">' + p.title + '</div>' +
+          '<div style="font-size:0.83rem;color:var(--text);line-height:1.4;margin-bottom:' + (p.action ? '6px' : '0') + ';">' + p.desc + '</div>' +
+          (p.action ? '<div style="font-size:0.8rem;color:var(--cyan);font-weight:700;">→ ' + p.action + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function renderPatternChart(days) {
+  if (days.length < 2) return '';
+  const reversed = days.slice().reverse();
+  const maxQ = 100;
+  const chartH = 80;
+  const chartW = 280;
+  const pts = reversed.map(function(d, i) {
+    const x = (i / (reversed.length - 1)) * chartW;
+    const y = chartH - ((d.quality || 0) / maxQ) * chartH;
+    return x + ',' + y;
+  });
+
+  const labels = reversed.map(function(d) {
+    return d.date.split('/').slice(0,2).join('/');
+  });
+
+  let html = '<div class="card" style="padding:14px;">' +
+    '<div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Score qualité — ' + days.length + ' derniers jours</div>' +
+    '<svg viewBox="0 0 ' + chartW + ' ' + chartH + '" style="width:100%;height:' + chartH + 'px;overflow:visible;">' +
+      '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linejoin="round"/>';
+
+  reversed.forEach(function(d, i) {
+    const x = (i / (reversed.length - 1)) * chartW;
+    const y = chartH - ((d.quality || 0) / maxQ) * chartH;
+    const c = (d.quality||0) >= 75 ? '#69ff47' : (d.quality||0) >= 55 ? '#ffd600' : '#ff4081';
+    html += '<circle cx="' + x + '" cy="' + y + '" r="4" fill="' + c + '"/>';
+    html += '<text x="' + x + '" y="' + (y - 8) + '" text-anchor="middle" fill="' + c + '" font-size="10" font-family="Barlow Condensed">' + (d.quality||0) + '</text>';
+  });
+
+  html += '</svg>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:4px;">' +
+    labels.map(function(l) {
+      return '<span style="font-size:0.65rem;color:var(--muted);">' + l + '</span>';
+    }).join('') +
+    '</div>' +
+  '</div>';
+  return html;
+}
+
+function renderProtAbsorption() {
+  const card = document.getElementById('protAbsCard');
+  if (!card || todayLog.length === 0) return;
+
+  let totalRaw = 0;
+  let totalEff = 0;
+  const details = [];
+
+  todayLog.forEach(function(item) {
+    const protPer100 = PROTEIN_CONTENT[item.food] || 0;
+    const raw = (protPer100 * item.qty) / 100;
+    const eff = getEffectiveProtein(item.food, item.qty, item.prep);
+    const abs = getEffectiveAbsorption(item.food, item.prep);
+    if (raw > 0.5) {
+      details.push({ food: item.food, raw: raw, eff: eff, abs: abs });
+    }
+    totalRaw += raw;
+    totalEff += eff;
+  });
+
+  details.sort(function(a,b) { return b.raw - a.raw; });
+
+  const globalAbs = totalRaw > 0 ? Math.round((totalEff / totalRaw) * 100) : 0;
+  const absColor = globalAbs >= 88 ? 'var(--green)' : globalAbs >= 75 ? 'var(--yellow)' : 'var(--pink)';
+
+  let html = '<div style="display:flex;gap:10px;margin-bottom:14px;">' +
+    '<div class="summary-card" style="flex:1;"><div class="val cyan">' + totalRaw.toFixed(1) + 'g</div><div class="lbl">Protéines brutes</div></div>' +
+    '<div class="summary-card" style="flex:1;"><div class="val" style="color:' + absColor + ';">' + totalEff.toFixed(1) + 'g</div><div class="lbl">Prot. effectifs</div></div>' +
+    '<div class="summary-card" style="flex:1;"><div class="val" style="color:' + absColor + ';">' + globalAbs + '%</div><div class="lbl">Absorption moy.</div></div>' +
+  '</div>';
+
+  if (details.length > 0) {
+    html += '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Détail par aliment</div>';
+    details.forEach(function(d) {
+      const c = d.abs >= 88 ? 'var(--green)' : d.abs >= 70 ? 'var(--yellow)' : 'var(--pink)';
+      const lostG = (d.raw - d.eff).toFixed(1);
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
+        '<span style="font-size:0.82rem;flex:1;">' + d.food + '</span>' +
+        '<span style="font-size:0.8rem;color:' + c + ';font-weight:700;margin-left:8px;">' + d.abs + '%</span>' +
+        '<span style="font-size:0.8rem;color:var(--muted);margin-left:8px;">' + d.raw.toFixed(1) + 'g → ' + d.eff.toFixed(1) + 'g</span>' +
+      '</div>';
+    });
+  }
+
+  card.innerHTML = html;
+}
+
+function render() {
+  const totals = computeTotals(todayLog);
+  renderBilan(totals);
+  renderRatio(totals);
+  renderDiversite();
+  renderProtAbsorption();
+  renderSatiety();
+  renderInflam();
+  renderTiming();
+  renderQuality();
+  renderPatterns();
+  renderMealLog();
+  renderAlertes(totals);
+  renderConseils(totals);
+  renderHistorique();
+}
+
+function renderBilan(totals) {
+  const score = todayLog.length > 0 ? computeScore(totals) : null;
+
+  // Score circle
+  const circle = document.getElementById('scoreCircle');
+  const num = document.getElementById('scoreNum');
+  const text = document.getElementById('scoreText');
+
+  if (score === null) {
+    num.textContent = '—';
+    circle.className = 'score-circle';
+    text.textContent = 'Ajoute tes repas pour calculer ton score micronutriments.';
+  } else {
+    num.textContent = score;
+    num.style.color = score >= 70 ? 'var(--green)' : score >= 50 ? 'var(--yellow)' : 'var(--pink)';
+    circle.className = 'score-circle ' + (score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low');
+    text.textContent = score >= 70 ? 'Bonne couverture micronutriments. Continue.' : score >= 50 ? 'Quelques points à améliorer. Voir les alertes.' : 'Couverture insuffisante. Action requise.';
+  }
+
+  // Bars
+  const container = document.getElementById('microBars');
+  if (todayLog.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">Aucun aliment enregistré aujourd\'hui.</div>';
+    return;
+  }
+
+  container.innerHTML = Object.keys(AJR).map(key => {
+    const val = totals[key];
+    const ajr = AJR[key];
+    const pct = Math.min((val / ajr.val) * 100, 130);
+    const displayPct = Math.min(pct, 100);
+    const status = pct >= 130 ? 'over' : getStatus(pct);
+    const label = pct >= 100 ? 'over' : status;
+
+    return `
+      <div class="micro-item">
+        <div class="micro-header">
+          <span class="micro-name">${key}</span>
+          <span class="micro-values"><span>${val.toFixed(1)}</span> / ${ajr.val} ${ajr.unit}</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill ${label}" style="width:${displayPct}%"></div>
+        </div>
+        <div class="micro-pct ${label}">${Math.round(pct)}% — ${getStatusLabel(pct)}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Summary
+  let ok = 0, low = 0, warn = 0;
+  Object.keys(AJR).forEach(k => {
+    const pct = (totals[k] / AJR[k].val) * 100;
+    if (pct >= 80) ok++;
+    else if (pct >= 50) warn++;
+    else low++;
+  });
+
+  document.getElementById('sumOk').textContent = ok;
+  document.getElementById('sumLow').textContent = low;
+  document.getElementById('sumWarn').textContent = warn;
+  document.getElementById('sumAliments').textContent = todayLog.length;
+}
+
+function renderMealLog() {
+  const meals = { 'petit-dej': 'Petit-déjeuner', 'dejeuner': 'Déjeuner', 'gouter': 'Goûter', 'diner': 'Dîner' };
+  let html = '';
+
+  Object.keys(meals).forEach(mealKey => {
+    const items = todayLog.filter(e => e.meal === mealKey);
+    if (items.length === 0) return;
+
+    html += `<div class="meal-section">
+      <div class="meal-label">${meals[mealKey]}</div>`;
+
+      items.forEach((item, idx) => {
+        const globalIdx = todayLog.indexOf(item);
+        const showAbs = PREP_FOODS.has(item.food);
+        const absRate = showAbs ? getEffectiveAbsorption(item.food, item.prep) : (BASE_ABSORPTION[item.food] || 85);
+        const effProt = getEffectiveProtein(item.food, item.qty, item.prep).toFixed(1);
+        const absColor = absRate >= 85 ? 'var(--green)' : absRate >= 70 ? 'var(--yellow)' : 'var(--pink)';
+        const prepLabel = item.prep && item.prep !== 'seul' ? ' · ' + PREP_LABELS[item.prep] : '';
+        html += '<div class="food-item">' +
+          '<div style="flex:1;">' +
+            '<div class="food-name">' + item.food + (prepLabel ? '<span style="font-size:0.7rem;color:var(--muted);font-weight:400;"> ' + prepLabel + '</span>' : '') + '</div>' +
+            '<div style="font-size:0.75rem;margin-top:2px;color:' + absColor + ';">' + absRate + '% abs. · ' + effProt + 'g prot. effectifs</div>' +
+          '</div>' +
+          '<span class="food-qty">' + item.qty + 'g</span>' +
+          '<button class="btn-remove" onclick="removeFood(' + globalIdx + ')">✕</button>' +
+        '</div>';
+      });
+
+    html += '</div>';
+  });
+
+  document.getElementById('mealLog').innerHTML = html || '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px 0;">Aucun aliment ajouté.</div>';
+}
+
+function renderAlertes(totals) {
+  if (todayLog.length === 0) return;
+
+  const low = [], warn = [], ok = [];
+
+  Object.keys(AJR).forEach(k => {
+    const pct = (totals[k] / AJR[k].val) * 100;
+    const item = { name: k, pct: Math.round(pct), note: AJR[k].note };
+    if (pct < 50) low.push(item);
+    else if (pct < 80) warn.push(item);
+    else ok.push(item);
+  });
+
+  let html = '';
+
+  if (low.length > 0) {
+    html += `<div class="section-title" style="margin-top:0">⛔ Carences (< 50%)</div>`;
+    low.forEach(item => {
+      html += `<div class="alert-box danger">
+        <div class="alert-icon">⛔</div>
+        <div class="alert-content">
+          <strong>${item.name} — ${item.pct}% des AJR</strong>
+          ${item.note}
+        </div>
+      </div>`;
+    });
+  }
+
+  if (warn.length > 0) {
+    html += `<div class="section-title">⚠️ À surveiller (50–80%)</div>`;
+    warn.forEach(item => {
+      html += `<div class="alert-box warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <strong>${item.name} — ${item.pct}% des AJR</strong>
+          ${item.note}
+        </div>
+      </div>`;
+    });
+  }
+
+  if (ok.length > 0) {
+    html += `<div class="section-title">✅ Objectifs atteints (> 80%)</div>`;
+    ok.forEach(item => {
+      html += `<div class="alert-box ok">
+        <div class="alert-icon">✅</div>
+        <div class="alert-content">
+          <strong>${item.name} — ${item.pct}%</strong>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (html) {
+    document.getElementById('alertesContent').innerHTML = html + '<div class="disclaimer">⚠️ Ce module détecte les <strong>apports insuffisants</strong>, pas les carences biologiques réelles. Une prise de sang reste indispensable pour confirmer (vitamine D, fer, B12 notamment).</div>';
+  }
+}
+
+function renderConseils(totals) {
+  if (todayLog.length === 0) return;
+
+  const deficits = Object.keys(AJR).filter(k => (totals[k] / AJR[k].val) * 100 < 80);
+
+  const foodSuggestions = {};
+  deficits.forEach(micro => {
+    Object.keys(FOODS_DB).forEach(food => {
+      if (FOODS_DB[food].micros[micro]) {
+        const contribution = (FOODS_DB[food].micros[micro] / AJR[micro].val) * 100;
+        if (contribution > 5) {
+          if (!foodSuggestions[food]) foodSuggestions[food] = [];
+          foodSuggestions[food].push({ micro, contribution: Math.round(contribution) });
+        }
+      }
+    });
+  });
+
+  if (Object.keys(foodSuggestions).length === 0) {
+    document.getElementById('conseilsContent').innerHTML = '<div style="color:var(--green);font-size:0.88rem;text-align:center;padding:16px 0;">✅ Excellente couverture ! Pas de carence détectée.</div>';
+    return;
+  }
+
+  const sorted = Object.entries(foodSuggestions)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 6);
+
+  document.getElementById('conseilsContent').innerHTML = sorted.map(([food, micros]) => `
+    <div class="conseil-item">
+      <div class="conseil-emoji">🍽</div>
+      <div class="conseil-text">
+        <strong>${food}</strong>
+        Apporte : ${micros.map(m => `${m.micro} (+${m.contribution}% AJR/100g)`).join(', ')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHistorique() {
+  if (history.length === 0) return;
+
+  const microKeys = Object.keys(AJR).slice(0, 5); // Top 5 pour l'historique
+
+  document.getElementById('historiqueContent').innerHTML = history.map(day => {
+    const score = day.score;
+    const badgeClass = score >= 70 ? 'green' : score >= 50 ? 'yellow' : 'pink';
+
+    return `
+      <div class="history-day">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="history-date">${day.date}</div>
+          <span class="badge ${badgeClass}">Score: ${score}</span>
+        </div>
+        <div class="history-bars">
+          ${microKeys.map(k => {
+            const pct = Math.min((day.totals[k] / AJR[k].val) * 100, 100);
+            const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--pink)';
+            return `
+              <div class="history-bar-row">
+                <div class="history-bar-label">${k}</div>
+                <div class="history-bar-mini">
+                  <div class="history-bar-fill" style="width:${pct}%;background:${color}"></div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function setMeal(meal, btn) {
+  currentMeal = meal;
+  document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updatePrepVisibility() {
+  const select = document.getElementById('foodSelect');
+  const prepRow = document.getElementById('prepRow');
+  const preview = document.getElementById('absorptionPreview');
+  const qtyEl = document.getElementById('foodQty');
+  const food = select.value;
+  if (food && PREP_FOODS.has(food)) {
+    prepRow.style.display = 'flex';
+    const prepMode = document.getElementById('prepMode').value;
+    const qty = parseFloat(qtyEl.value) || 100;
+    const abs = getEffectiveAbsorption(food, prepMode);
+    const effProt = getEffectiveProtein(food, qty, prepMode).toFixed(1);
+    const base = BASE_ABSORPTION[food];
+    const color = abs >= 85 ? 'var(--green)' : abs >= 70 ? 'var(--yellow)' : 'var(--pink)';
+    preview.style.display = 'flex';
+    preview.innerHTML = '<div style="font-size:0.82rem;padding:4px 0;color:' + color + ';font-weight:700;">' +
+      'Absorption : ' + abs + '% (base ' + base + '%) → ' + effProt + 'g protéines effectifs</div>';
+  } else {
+    prepRow.style.display = 'none';
+    preview.style.display = 'none';
+  }
+}
+
+function addFood() {
+  const select = document.getElementById('foodSelect');
+  const qty = parseFloat(document.getElementById('foodQty').value);
+  if (!select.value || !qty || qty <= 0) return;
+  const prepMode = PREP_FOODS.has(select.value)
+    ? document.getElementById('prepMode').value
+    : null;
+
+  todayLog.push({ food: select.value, qty, meal: currentMeal, prep: prepMode });
+  localStorage.setItem('micro_today', JSON.stringify(todayLog));
+  select.value = '';
+  document.getElementById('foodQty').value = '100';
+  document.getElementById('prepRow').style.display = 'none';
+  document.getElementById('absorptionPreview').style.display = 'none';
+  render();
+}
+
+function removeFood(idx) {
+  todayLog.splice(idx, 1);
+  localStorage.setItem('micro_today', JSON.stringify(todayLog));
+  render();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init() {
+  // Set date
+  const dateStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('headerDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+  // Populate food select
+  const sel = document.getElementById('foodSelect');
+  Object.keys(FOODS_DB).sort().forEach(food => {
+    const opt = document.createElement('option');
+    opt.value = food;
+    opt.textContent = food;
+    sel.appendChild(opt);
+  });
+
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
